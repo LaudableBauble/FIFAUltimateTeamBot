@@ -28,7 +28,11 @@ namespace UltimateTeam.Toolkit.Request
             var response = await Client.SendAsync(requestMessage);
             response.EnsureSuccessStatusCode();
 
-            var sellResponse = JsonDeserializer.Deserialize<SellResponse>(await response.Content.ReadAsStreamAsync());
+            var sellResponse = new SellResponse();
+            var stream = await response.Content.ReadAsStreamAsync();
+
+            try { sellResponse = JsonDeserializer.Deserialize<SellResponse>(stream); }
+            catch (Exception) { sellResponse.Error = JsonDeserializer.Deserialize<ErrorResponse>(stream); }
 
             return sellResponse;
         }

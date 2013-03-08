@@ -43,6 +43,8 @@
   <ItemGroup>
     <Compile Include="Extension\AuctionInfoExtensions.cs" />
     <Compile Include="Model\CardType.cs" />
+    <Compile Include="Model\ErrorResponse.cs" />
+    <Compile Include="Model\ResponseBase.cs" />
     <Compile Include="Model\ItemDataResponse.cs" />
     <Compile Include="Model\SellResponse.cs" />
     <Compile Include="Model\DateOfBirth.cs" />

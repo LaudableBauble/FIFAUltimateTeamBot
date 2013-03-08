@@ -24,6 +24,7 @@ namespace FIFAUltimateTeamBot
         public static event TradeItemsEventHandler OnUpdateItems;
         public static event TradeItemsEventHandler OnMoveItems;
         public static event TradeItemsEventHandler OnSellItems;
+        public static event TradeItemsEventHandler OnSearchItems;
         public static event TradeItemsEventHandler OnRemoveItems;
         #endregion
 
@@ -254,6 +255,19 @@ namespace FIFAUltimateTeamBot
 
             //Add the sell items request to the request queue.
             _RequestQueue.AddLast(() => SellItemsAsync(tradeItems));
+        }
+        /// <summary>
+        /// Search for some items.
+        /// </summary>
+        /// <param name="searchParameters"></param>
+        public static void SearchItems(PlayerSearchParameters searchParameters)
+        {
+            //Validation check.
+            if (!_IsLoggedIn) { throw new ArgumentException("You have not logged in yet!"); }
+            if (searchParameters != null) { throw new ArgumentException("The search parameters must not be null!"); }
+
+            //Add the search request to the request queue.
+            _RequestQueue.AddLast(() => SearchItemsAsync(searchParameters));
         }
 
         /// <summary>
@@ -510,11 +524,38 @@ namespace FIFAUltimateTeamBot
             foreach (PlayerItem auction in auctions)
             {
                 var response = await new SellRequest().SellItem(auction.AuctionInfo);
+                if (response.HasFailed())
+                { throw new Exception("Request failed!"); }
                 auction.AuctionInfo.TradeId = response.TradeId;
             }
 
             //Notify all interested parties.
             SellItemsEventInvoke(auctions.ToList());
+        }
+        /// <summary>
+        /// Search for players on the global auction.
+        /// </summary>
+        /// <returns></returns>
+        private async static Task SearchItemsAsync(PlayerSearchParameters searchParameters)
+        {
+            //Validation check.
+            if (!_IsLoggedIn) { throw new ArgumentException("You have not logged in yet!"); }
+            if (searchParameters != null) { throw new ArgumentException("The search parameters must not be null!"); }
+
+            //Search for players.
+            var response = await new SearchRequest().SearchAsync(searchParameters);
+
+            //The list to return.
+            var items = new List<PlayerItem>();
+
+            foreach (AuctionInfo auction in response.AuctionInfo)
+            {
+                Item itemData = await new ItemRequest().GetItemAsync(auction.ItemData.ResourceId);
+                items.Add(new PlayerItem(itemData, auction) { Location = TradeItemLocation.Auction });
+            }
+
+            //Notify all interested parties.
+            SearchItemsEventInvoke(items);
         }
 
         /// <summary>
@@ -546,6 +587,13 @@ namespace FIFAUltimateTeamBot
             tradeItems.ForEach(item => { item.Update = true; item.IsLocked = false; });
 
             if (OnSellItems != null) { OnSellItems(tradeItems); }
+        }
+        /// <summary>
+        /// A search for players has been done. Let the world know.
+        /// </summary>
+        private static void SearchItemsEventInvoke(List<PlayerItem> tradeItems)
+        {
+            if (OnSearchItems != null) { OnSearchItems(tradeItems); }
         }
         /// <summary>
         /// Some trade items have been sold and subsequently removed from the trade pile. Let the world know.
