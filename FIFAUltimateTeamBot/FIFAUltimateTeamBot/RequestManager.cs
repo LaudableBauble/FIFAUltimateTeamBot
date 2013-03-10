@@ -85,12 +85,12 @@ namespace FIFAUltimateTeamBot
                     SellItems(toRelist.ToList());
                 }
 
-                //If there is less than 30 items up for sale in the trade pile, try to add some from the watchlist or unassigned items.
-                if (_TradeItems.Count(item => item.Location == TradeItemLocation.TradePile) < 30)
+                //If there is less than 40 items up for sale in the trade pile, try to add some from the watchlist or unassigned items.
+                if (_TradeItems.Count(item => item.Location == TradeItemLocation.TradePile) < 40)
                 {
                     //Get the watch list and choose which of them to move to the trade pile.
                     var watchList = _TradeItems.Where(item => item.Location != TradeItemLocation.TradePile && item.IsAllowedToBeSold && !item.IsLocked);
-                    MoveItems(watchList.Take(30 - _TradeItems.Count(item => item.Location == TradeItemLocation.TradePile)).ToList());
+                    MoveItems(watchList.Take(40 - _TradeItems.Count(item => item.Location == TradeItemLocation.TradePile)).ToList());
                 }
 
                 //Handle all stockpiled requests.
@@ -112,10 +112,18 @@ namespace FIFAUltimateTeamBot
                     await _RequestQueue.First()();
                     _RequestQueue.RemoveFirst();
                 }
-                catch (Exception)
+                catch (RequestException e)
                 {
-                    //An exception occurred, try to fix it by login in again.
-                    _RequestQueue.AddFirst(() => LoginAsync());
+                    //Depending on the error, do different things.
+                    switch (e.Error.Reason)
+                    {
+                        default:
+                            {
+                                //An exception occurred, try to fix it by login in again.
+                                _RequestQueue.AddFirst(() => LoginAsync());
+                                break;
+                            }
+                    }
                 }
             }
         }
@@ -524,8 +532,6 @@ namespace FIFAUltimateTeamBot
             foreach (PlayerItem auction in auctions)
             {
                 var response = await new SellRequest().SellItem(auction.AuctionInfo);
-                if (response.HasFailed())
-                { throw new Exception("Request failed!"); }
                 auction.AuctionInfo.TradeId = response.TradeId;
             }
 

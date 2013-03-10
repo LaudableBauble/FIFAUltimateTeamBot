@@ -36,6 +36,13 @@ namespace FIFAUltimateTeamBot
             lstvClub.MouseDoubleClick += OnJumpToItem;
             lstvClub.ItemChecked += OnAllowForAuction;
             tabctrlMain.Selected += OnTabSelectedChange;
+            ckbTradePile.CheckedChanged += OnCheckedChanged;
+            ckbWatchList.CheckedChanged += OnCheckedChanged;
+            ckbClub.CheckedChanged += OnCheckedChanged;
+            ckbUnassigned.CheckedChanged += OnCheckedChanged;
+            ckbAuctionItems.CheckedChanged += OnCheckedChanged;
+            ckbCanBeSold.CheckedChanged += OnItemAllowedToBeSoldChanged;
+            lstvItems.ItemSelectionChanged += OnItemSelectionChanged;
             RequestManager.OnUpdateItems += OnUpdateTradeItems;
             RequestManager.OnMoveItems += OnMoveTradeItems;
             RequestManager.OnSellItems += OnSellTradeItems;
@@ -43,6 +50,7 @@ namespace FIFAUltimateTeamBot
 
             //Setup the list views.
             SetUpListViews();
+            SetUpList();
         }
 
         /// <summary>
@@ -76,7 +84,6 @@ namespace FIFAUltimateTeamBot
             lstvClub.GridLines = true;
             lstvClub.FullRowSelect = true;
             lstvClub.CheckBoxes = true;
-
 
             //Reset the list views.
             lstvTradePile.Clear();
@@ -243,6 +250,80 @@ namespace FIFAUltimateTeamBot
             }
         }
         /// <summary>
+        /// Set up the list view.
+        /// </summary>
+        public void SetUpList()
+        {
+            //Enable the correct settings.
+            lstvItems.View = View.Details;
+            lstvItems.LabelEdit = false;
+            lstvItems.AllowColumnReorder = false;
+            lstvItems.GridLines = true;
+            lstvItems.FullRowSelect = true;
+
+            //Reset the list view.
+            lstvItems.Clear();
+
+            //Add the columns.
+            lstvItems.Columns.Add("First Name", -2, HorizontalAlignment.Left);
+            lstvItems.Columns.Add("Last Name", -2, HorizontalAlignment.Left);
+            lstvItems.Columns.Add("Rating", -2, HorizontalAlignment.Left);
+            lstvItems.Columns.Add("Position", -2, HorizontalAlignment.Left);
+            lstvItems.Columns.Add("Card Type", -2, HorizontalAlignment.Left);
+            lstvItems.Columns.Add("Pile", -2, HorizontalAlignment.Left);
+            lstvItems.Columns.Add("Bid", -2, HorizontalAlignment.Left);
+            lstvItems.Columns.Add("Time", -2, HorizontalAlignment.Left);
+            lstvItems.Columns.Add("Pace", -2, HorizontalAlignment.Left);
+            lstvItems.Columns.Add("Shooting", -2, HorizontalAlignment.Left);
+            lstvItems.Columns.Add("Passing", -2, HorizontalAlignment.Left);
+            lstvItems.Columns.Add("Dribbling", -2, HorizontalAlignment.Left);
+            lstvItems.Columns.Add("Defending", -2, HorizontalAlignment.Left);
+            lstvItems.Columns.Add("Heading", -2, HorizontalAlignment.Left);
+        }
+        /// <summary>
+        /// Update the list of items.
+        /// </summary>
+        public void UpdateList(List<PlayerItem> items)
+        {
+            //Check if this method has been accessed from another thread, ie. not from the GUI thread, and rectify it.
+            if (lstvItems.InvokeRequired) { Invoke((MethodInvoker)(() => UpdateList(items))); return; }
+
+            //Pause the drawing of the list view until a later date.
+            lstvItems.BeginUpdate();
+
+            //Clear the list view.
+            lstvItems.Items.Clear();
+
+            //For all specified items, either add them to the list or update them.
+            foreach (PlayerItem item in items)
+            {
+                //Add an item.
+                var lstvItem = new ListViewItem(item.ResourceData.FirstName, 0);
+                lstvItem.Tag = item;
+
+                //The data.
+                lstvItem.SubItems.Add(item.ResourceData.LastName);
+                lstvItem.SubItems.Add(item.ResourceData.Rating.ToString());
+                lstvItem.SubItems.Add(item.AuctionInfo.ItemData.PreferredPosition);
+                lstvItem.SubItems.Add(item.ResourceData.CardType.ToString());
+                lstvItem.SubItems.Add(item.Location.ToString());
+                lstvItem.SubItems.Add(item.AuctionInfo.CurrentPrice.ToString());
+                lstvItem.SubItems.Add(item.AuctionInfo.Expires.ToString());
+                lstvItem.SubItems.Add(item.ResourceData.Attribute1.ToString());
+                lstvItem.SubItems.Add(item.ResourceData.Attribute2.ToString());
+                lstvItem.SubItems.Add(item.ResourceData.Attribute3.ToString());
+                lstvItem.SubItems.Add(item.ResourceData.Attribute4.ToString());
+                lstvItem.SubItems.Add(item.ResourceData.Attribute5.ToString());
+                lstvItem.SubItems.Add(item.ResourceData.Attribute6.ToString());
+
+                //Add the item row to the list view.
+                lstvItems.Items.Add(lstvItem);
+            }
+
+            //Continue the drawing of the list view now that the update is complete.
+            lstvItems.EndUpdate();
+        }
+        /// <summary>
         /// Display the selected item on the Selected Item tab.
         /// </summary>
         public void DisplaySelectedItem()
@@ -378,12 +459,56 @@ namespace FIFAUltimateTeamBot
 
             //Get the number of items in the selected tab.
             int count = 0;
-            if (tab == tabTradePile) { count = lstvTradePile.Items.Count; }
+            if (tab == tabItems) { count = lstvItems.Items.Count; }
+            else if (tab == tabTradePile) { count = lstvTradePile.Items.Count; }
             else if (tab == tabWatchlist) { count = lstvWatchList.Items.Count; }
-            if (tab == tabClub) { count = lstvClub.Items.Count; }
+            else if (tab == tabClub) { count = lstvClub.Items.Count; }
 
             //Change the item count to reflect the number of items in the selected tab.
             statlblCount.Text = count + " items.";
+        }
+
+        /// <summary>
+        /// If a sorting checkbox has been checked or unchecked, update the list of items.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void OnCheckedChanged(object sender, EventArgs e)
+        {
+            //Filter the list of items to display.
+            var items = RequestManager.TradeItems;
+            items = !ckbTradePile.Checked ? items.Where(item => item.Location != TradeItemLocation.TradePile).ToList() : items;
+            items = !ckbWatchList.Checked ? items.Where(item => item.Location != TradeItemLocation.WatchList).ToList() : items;
+            items = !ckbClub.Checked ? items.Where(item => item.Location != TradeItemLocation.Club).ToList() : items;
+            items = !ckbUnassigned.Checked ? items.Where(item => item.Location != TradeItemLocation.Unassigned).ToList() : items;
+            items = !ckbAuctionItems.Checked ? items.Where(item => item.Location != TradeItemLocation.Auction).ToList() : items;
+
+            //Update the list view.
+            UpdateList(items);
+        }
+        /// <summary>
+        /// If an item in the list view has been selected, display it.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void OnItemSelectionChanged(object sender, EventArgs e)
+        {
+            //Get the item.
+            _SelectedItem = (PlayerItem)(sender as ListView).SelectedItems[0].Tag;
+
+            //Display the full name.
+            lblItemName.Text = _SelectedItem.ResourceData.FirstName + " " + _SelectedItem.ResourceData.LastName;
+            //Whether the item is allowed to be sold or not.
+            ckbCanBeSold.Checked = _SelectedItem.IsAllowedToBeSold;
+        }
+        /// <summary>
+        /// Change whether a selected item is allowed to be sold or not.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void OnItemAllowedToBeSoldChanged(object sender, EventArgs e)
+        {
+            _SelectedItem.IsAllowedToBeSold = ckbCanBeSold.Checked;
         }
     }
 }
