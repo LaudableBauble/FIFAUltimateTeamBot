@@ -35,13 +35,15 @@
             this.helpMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tabctrlMain = new System.Windows.Forms.TabControl();
             this.tabItems = new System.Windows.Forms.TabPage();
-            this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+            this.splitItems = new System.Windows.Forms.SplitContainer();
+            this.lstvItems = new System.Windows.Forms.ListView();
+            this.ckbCanBeSold = new System.Windows.Forms.CheckBox();
+            this.lblItemName = new System.Windows.Forms.Label();
             this.ckbAuctionItems = new System.Windows.Forms.CheckBox();
             this.ckbUnassigned = new System.Windows.Forms.CheckBox();
             this.ckbClub = new System.Windows.Forms.CheckBox();
             this.ckbWatchList = new System.Windows.Forms.CheckBox();
             this.ckbTradePile = new System.Windows.Forms.CheckBox();
-            this.lstvItems = new System.Windows.Forms.ListView();
             this.tabTradePile = new System.Windows.Forms.TabPage();
             this.lstvTradePile = new System.Windows.Forms.ListView();
             this.tabWatchlist = new System.Windows.Forms.TabPage();
@@ -55,15 +57,14 @@
             this.rtxbLog = new System.Windows.Forms.RichTextBox();
             this.statMain = new System.Windows.Forms.StatusStrip();
             this.statlblCount = new System.Windows.Forms.ToolStripStatusLabel();
-            this.lblItemName = new System.Windows.Forms.Label();
-            this.ckbCanBeSold = new System.Windows.Forms.CheckBox();
+            this.btnExpandCollapseItem = new System.Windows.Forms.Button();
             this.mnuMain.SuspendLayout();
             this.tabctrlMain.SuspendLayout();
             this.tabItems.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
-            this.splitContainer1.Panel1.SuspendLayout();
-            this.splitContainer1.Panel2.SuspendLayout();
-            this.splitContainer1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitItems)).BeginInit();
+            this.splitItems.Panel1.SuspendLayout();
+            this.splitItems.Panel2.SuspendLayout();
+            this.splitItems.SuspendLayout();
             this.tabTradePile.SuspendLayout();
             this.tabWatchlist.SuspendLayout();
             this.tabClub.SuspendLayout();
@@ -126,7 +127,8 @@
             // 
             // tabItems
             // 
-            this.tabItems.Controls.Add(this.splitContainer1);
+            this.tabItems.Controls.Add(this.btnExpandCollapseItem);
+            this.tabItems.Controls.Add(this.splitItems);
             this.tabItems.Controls.Add(this.ckbAuctionItems);
             this.tabItems.Controls.Add(this.ckbUnassigned);
             this.tabItems.Controls.Add(this.ckbClub);
@@ -139,22 +141,50 @@
             this.tabItems.Text = "Items";
             this.tabItems.UseVisualStyleBackColor = true;
             // 
-            // splitContainer1
+            // splitItems
             // 
-            this.splitContainer1.Location = new System.Drawing.Point(3, 49);
-            this.splitContainer1.Name = "splitContainer1";
+            this.splitItems.Location = new System.Drawing.Point(3, 49);
+            this.splitItems.Name = "splitItems";
             // 
-            // splitContainer1.Panel1
+            // splitItems.Panel1
             // 
-            this.splitContainer1.Panel1.Controls.Add(this.lstvItems);
+            this.splitItems.Panel1.Controls.Add(this.lstvItems);
             // 
-            // splitContainer1.Panel2
+            // splitItems.Panel2
             // 
-            this.splitContainer1.Panel2.Controls.Add(this.ckbCanBeSold);
-            this.splitContainer1.Panel2.Controls.Add(this.lblItemName);
-            this.splitContainer1.Size = new System.Drawing.Size(870, 432);
-            this.splitContainer1.SplitterDistance = 615;
-            this.splitContainer1.TabIndex = 0;
+            this.splitItems.Panel2.Controls.Add(this.ckbCanBeSold);
+            this.splitItems.Panel2.Controls.Add(this.lblItemName);
+            this.splitItems.Size = new System.Drawing.Size(870, 432);
+            this.splitItems.SplitterDistance = 615;
+            this.splitItems.TabIndex = 0;
+            // 
+            // lstvItems
+            // 
+            this.lstvItems.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lstvItems.Location = new System.Drawing.Point(0, 0);
+            this.lstvItems.Name = "lstvItems";
+            this.lstvItems.Size = new System.Drawing.Size(615, 432);
+            this.lstvItems.TabIndex = 1;
+            this.lstvItems.UseCompatibleStateImageBehavior = false;
+            // 
+            // ckbCanBeSold
+            // 
+            this.ckbCanBeSold.AutoSize = true;
+            this.ckbCanBeSold.Location = new System.Drawing.Point(6, 301);
+            this.ckbCanBeSold.Name = "ckbCanBeSold";
+            this.ckbCanBeSold.Size = new System.Drawing.Size(82, 17);
+            this.ckbCanBeSold.TabIndex = 7;
+            this.ckbCanBeSold.Text = "Can be sold";
+            this.ckbCanBeSold.UseVisualStyleBackColor = true;
+            // 
+            // lblItemName
+            // 
+            this.lblItemName.AutoSize = true;
+            this.lblItemName.Location = new System.Drawing.Point(3, 36);
+            this.lblItemName.Name = "lblItemName";
+            this.lblItemName.Size = new System.Drawing.Size(35, 13);
+            this.lblItemName.TabIndex = 0;
+            this.lblItemName.Text = "label1";
             // 
             // ckbAuctionItems
             // 
@@ -205,15 +235,6 @@
             this.ckbTradePile.TabIndex = 2;
             this.ckbTradePile.Text = "Trade Pile";
             this.ckbTradePile.UseVisualStyleBackColor = true;
-            // 
-            // lstvItems
-            // 
-            this.lstvItems.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lstvItems.Location = new System.Drawing.Point(0, 0);
-            this.lstvItems.Name = "lstvItems";
-            this.lstvItems.Size = new System.Drawing.Size(615, 432);
-            this.lstvItems.TabIndex = 1;
-            this.lstvItems.UseCompatibleStateImageBehavior = false;
             // 
             // tabTradePile
             // 
@@ -334,24 +355,15 @@
             this.statlblCount.Size = new System.Drawing.Size(67, 17);
             this.statlblCount.Text = "Item Count";
             // 
-            // lblItemName
+            // btnExpandCollapseItem
             // 
-            this.lblItemName.AutoSize = true;
-            this.lblItemName.Location = new System.Drawing.Point(3, 36);
-            this.lblItemName.Name = "lblItemName";
-            this.lblItemName.Size = new System.Drawing.Size(35, 13);
-            this.lblItemName.TabIndex = 0;
-            this.lblItemName.Text = "label1";
-            // 
-            // ckbCanBeSold
-            // 
-            this.ckbCanBeSold.AutoSize = true;
-            this.ckbCanBeSold.Location = new System.Drawing.Point(6, 301);
-            this.ckbCanBeSold.Name = "ckbCanBeSold";
-            this.ckbCanBeSold.Size = new System.Drawing.Size(82, 17);
-            this.ckbCanBeSold.TabIndex = 7;
-            this.ckbCanBeSold.Text = "Can be sold";
-            this.ckbCanBeSold.UseVisualStyleBackColor = true;
+            this.btnExpandCollapseItem.Location = new System.Drawing.Point(811, 22);
+            this.btnExpandCollapseItem.Name = "btnExpandCollapseItem";
+            this.btnExpandCollapseItem.Size = new System.Drawing.Size(57, 23);
+            this.btnExpandCollapseItem.TabIndex = 7;
+            this.btnExpandCollapseItem.Text = "--->";
+            this.btnExpandCollapseItem.UseVisualStyleBackColor = true;
+            this.btnExpandCollapseItem.Click += new System.EventHandler(this.OnExpandOrCollapseItem);
             // 
             // Main
             // 
@@ -369,11 +381,11 @@
             this.tabctrlMain.ResumeLayout(false);
             this.tabItems.ResumeLayout(false);
             this.tabItems.PerformLayout();
-            this.splitContainer1.Panel1.ResumeLayout(false);
-            this.splitContainer1.Panel2.ResumeLayout(false);
-            this.splitContainer1.Panel2.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
-            this.splitContainer1.ResumeLayout(false);
+            this.splitItems.Panel1.ResumeLayout(false);
+            this.splitItems.Panel2.ResumeLayout(false);
+            this.splitItems.Panel2.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitItems)).EndInit();
+            this.splitItems.ResumeLayout(false);
             this.tabTradePile.ResumeLayout(false);
             this.tabWatchlist.ResumeLayout(false);
             this.tabClub.ResumeLayout(false);
@@ -415,9 +427,10 @@
         private System.Windows.Forms.CheckBox ckbClub;
         private System.Windows.Forms.CheckBox ckbWatchList;
         private System.Windows.Forms.CheckBox ckbTradePile;
-        private System.Windows.Forms.SplitContainer splitContainer1;
+        private System.Windows.Forms.SplitContainer splitItems;
         private System.Windows.Forms.Label lblItemName;
         private System.Windows.Forms.CheckBox ckbCanBeSold;
+        private System.Windows.Forms.Button btnExpandCollapseItem;
     }
 }
 

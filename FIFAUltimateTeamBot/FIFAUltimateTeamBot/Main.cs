@@ -510,5 +510,19 @@ namespace FIFAUltimateTeamBot
         {
             _SelectedItem.IsAllowedToBeSold = ckbCanBeSold.Checked;
         }
+        /// <summary>
+        /// Either expand or collapse the panel that displays the currently selected item.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void OnExpandOrCollapseItem(object sender, EventArgs e)
+        {
+            //Either expand or collapse the panel.
+            splitItems.Panel2Collapsed = !splitItems.Panel2Collapsed;
+
+            //Change the text of the button to reflect the change.
+            if (splitItems.Panel2Collapsed) { btnExpandCollapseItem.Text = "<---"; }
+            else { btnExpandCollapseItem.Text = "--->"; }
+        }
     }
 }
