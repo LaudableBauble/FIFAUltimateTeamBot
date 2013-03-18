@@ -21,6 +21,10 @@ namespace FIFAUltimateTeamBot
         private static LinkedList<Func<Task>> _RequestQueue;
 
         public delegate void TradeItemsEventHandler(List<PlayerItem> tradeItems);
+        public static event TradeItemsEventHandler OnLoadTradePile;
+        public static event TradeItemsEventHandler OnLoadWatchList;
+        public static event TradeItemsEventHandler OnLoadUnassigned;
+        public static event TradeItemsEventHandler OnLoadClub;
         public static event TradeItemsEventHandler OnUpdateItems;
         public static event TradeItemsEventHandler OnMoveItems;
         public static event TradeItemsEventHandler OnSellItems;
@@ -360,7 +364,7 @@ namespace FIFAUltimateTeamBot
             }
 
             //Notify all interested parties.
-            UpdateItemsEventInvoke(_TradeItems.Where(item => auctions.Any(auction => auction == item.AuctionInfo)).ToList());
+            LoadTradePileEventInvoke(_TradeItems.Where(item => auctions.Any(auction => auction == item.AuctionInfo)).ToList());
         }
         /// <summary>
         /// Load all trade items in the watch pile.
@@ -397,7 +401,7 @@ namespace FIFAUltimateTeamBot
             }
 
             //Notify all interested parties.
-            UpdateItemsEventInvoke(_TradeItems.Where(item => auctions.Any(auction => auction == item.AuctionInfo)).ToList());
+            LoadWatchListEventInvoke(_TradeItems.Where(item => auctions.Any(auction => auction == item.AuctionInfo)).ToList());
         }
         /// <summary>
         /// Load all unassigned items.
@@ -447,7 +451,7 @@ namespace FIFAUltimateTeamBot
             }
 
             //Notify all interested parties.
-            UpdateItemsEventInvoke(_TradeItems.Where(item => itemData.Any(data => data == item.AuctionInfo.ItemData)).ToList());
+            LoadUnassignedEventInvoke(_TradeItems.Where(item => itemData.Any(data => data == item.AuctionInfo.ItemData)).ToList());
         }
         /// <summary>
         /// Load all player items in the club.
@@ -458,7 +462,7 @@ namespace FIFAUltimateTeamBot
             if (!_IsLoggedIn) { throw new ArgumentException("You are not logged in yet!"); }
 
             //Get the club item data.
-            var response = await new TradeRequest().GetClubPlayerItems(100);
+            var response = await new TradeRequest().GetClubPlayerItems(200);
             var itemData = response.ItemData;
 
             //If no items were found, stop here.
@@ -497,7 +501,7 @@ namespace FIFAUltimateTeamBot
             }
 
             //Notify all interested parties.
-            UpdateItemsEventInvoke(_TradeItems.Where(item => itemData.Any(data => data == item.AuctionInfo.ItemData)).ToList());
+            LoadClubEventInvoke(_TradeItems.Where(item => itemData.Any(data => data == item.AuctionInfo.ItemData)).ToList());
         }
         /// <summary>
         /// Move the specified trade items to the trade pile.
@@ -564,6 +568,46 @@ namespace FIFAUltimateTeamBot
             SearchItemsEventInvoke(items);
         }
 
+        /// <summary>
+        /// The trade pile has been loaded. Let the world know.
+        /// </summary>
+        private static void LoadTradePileEventInvoke(List<PlayerItem> tradeItems)
+        {
+            //Unlock all items and disable the update flag.
+            tradeItems.ForEach(item => { item.IsLocked = false; item.Update = false; });
+
+            if (OnLoadTradePile != null) { OnLoadTradePile(tradeItems); }
+        }
+        /// <summary>
+        /// The watch list has been loaded. Let the world know.
+        /// </summary>
+        private static void LoadWatchListEventInvoke(List<PlayerItem> tradeItems)
+        {
+            //Unlock all items and disable the update flag.
+            tradeItems.ForEach(item => { item.IsLocked = false; item.Update = false; });
+
+            if (OnLoadWatchList != null) { OnLoadWatchList(tradeItems); }
+        }
+        /// <summary>
+        /// The unassigned items has been loaded. Let the world know.
+        /// </summary>
+        private static void LoadUnassignedEventInvoke(List<PlayerItem> tradeItems)
+        {
+            //Unlock all items and disable the update flag.
+            tradeItems.ForEach(item => { item.IsLocked = false; item.Update = false; });
+
+            if (OnLoadUnassigned != null) { OnLoadUnassigned(tradeItems); }
+        }
+        /// <summary>
+        /// The items in the club has been loaded. Let the world know.
+        /// </summary>
+        private static void LoadClubEventInvoke(List<PlayerItem> tradeItems)
+        {
+            //Unlock all items and disable the update flag.
+            tradeItems.ForEach(item => { item.IsLocked = false; item.Update = false; });
+
+            if (OnLoadClub != null) { OnLoadClub(tradeItems); }
+        }
         /// <summary>
         /// Some trade items have seen their auction info and item data updated. Let the world know.
         /// </summary>

@@ -5,35 +5,20 @@ namespace UltimateTeam.Toolkit.Parameter
     public class Formation : SearchParameterBase<string>
     {
         public const string ThreeFourOneTwo = "f3412";
-
         public const string ThreeFourTwoOne = "f3421";
-
         public const string ThreeFourThree = "f343";
-
         public const string ThreeFiveTwo = "f352";
-
         public const string FourOneTwoOneTwo = "f41212";
-
         public const string FourTwoThreeOne = "f4231";
-
         public const string FourTwoTwoTwo = "f4222";
-
         public const string FourThreeOneTwo = "f4312";
-
         public const string FourThreeTwoOne = "f4321";
-
         public const string FourThreeThree = "f433";
-
         public const string FourFourOneOne = "f4411";
-
         public const string FourFourTwo = "f442";
-
         public const string FourFiveOne = "f451";
-
         public const string FiveTwoOneTwo = "f5212";
-
         public const string FiveTwoTwoOne = "f5221";
-
         public const string FiveThreeTwo = "f532";
 
         private Formation(string description, string value)

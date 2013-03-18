@@ -5,13 +5,9 @@ namespace UltimateTeam.Toolkit.Parameter
     public class League : SearchParameterBase<uint>
     {
         public const uint BarclaysPremierLeague = 13;
-
         public const uint Bundesliga = 19;
-
         public const uint LigaBbva = 53;
-
         public const uint Ligue1 = 16;
-
         public const uint SerieA = 31;
 
         private League(string description, uint value)

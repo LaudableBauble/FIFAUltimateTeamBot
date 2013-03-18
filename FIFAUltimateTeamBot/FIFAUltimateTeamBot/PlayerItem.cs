@@ -13,6 +13,7 @@ namespace FIFAUltimateTeamBot
         #region Fields
         private Item _ResourceData;
         private AuctionInfo _AuctionInfo;
+        private StatPackage _Stats;
         private DateTime _LastUpdated;
         private TradeItemLocation _Location;
         private bool _IsLocked;
@@ -31,6 +32,7 @@ namespace FIFAUltimateTeamBot
         {
             _ResourceData = resourceData;
             _AuctionInfo = auctionInfo;
+            _Stats = new StatPackage(_AuctionInfo.ItemData.Id);
             _LastUpdated = DateTime.Now;
             _Location = TradeItemLocation.Unknown;
             _IsLocked = false;
@@ -48,6 +50,7 @@ namespace FIFAUltimateTeamBot
         {
             _AuctionInfo.SellerEstablished = "0";
             _AuctionInfo.StartingBid = 0;
+            _AuctionInfo.CurrentPrice = 0;
             _Location = TradeItemLocation.TradePile;
         }
         /// <summary>
@@ -85,6 +88,14 @@ namespace FIFAUltimateTeamBot
         {
             get { return _AuctionInfo; }
             set { _AuctionInfo = value; _LastUpdated = DateTime.Now; _Update = false; }
+        }
+        /// <summary>
+        /// The auction stats of this player item.
+        /// </summary>
+        public StatPackage Stats
+        {
+            get { return _Stats; }
+            set { _Stats = value; }
         }
         /// <summary>
         /// The time this player item was last updated.
