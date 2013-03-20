@@ -14,7 +14,6 @@ namespace FIFAUltimateTeamBot
     public static class RequestManager
     {
         #region Fields
-        private static LoginCredentials _LoginCredentials;
         private static bool _IsLoggedIn;
         private static bool _IsActive;
         private static List<PlayerItem> _TradeItems;
@@ -36,11 +35,9 @@ namespace FIFAUltimateTeamBot
         /// <summary>
         /// Initialize the request manager, something which includes trying to login.
         /// </summary>
-        /// <param name="loginCredentials">The login credentials to use.</param>
-        public static void Initialize(LoginCredentials loginCredentials)
+        public static void Initialize()
         {
             //Store the user information.
-            _LoginCredentials = loginCredentials;
             _IsLoggedIn = false;
             _IsActive = true;
             _TradeItems = new List<PlayerItem>();
@@ -288,15 +285,15 @@ namespace FIFAUltimateTeamBot
         private async static Task LoginAsync()
         {
             //Validation check.
-            if (string.IsNullOrWhiteSpace(_LoginCredentials.Username)) { throw new ArgumentException("The username/email is not valid!"); }
-            if (string.IsNullOrWhiteSpace(_LoginCredentials.Password)) { throw new ArgumentException("The password is not valid!"); }
-            if (string.IsNullOrWhiteSpace(_LoginCredentials.SecretAnswerHash)) { throw new ArgumentException("The secret answer is not valid!"); }
+            if (string.IsNullOrWhiteSpace(DataManager.LoginCredentials.Username)) { throw new ArgumentException("The username/email is not valid!"); }
+            if (string.IsNullOrWhiteSpace(DataManager.LoginCredentials.Password)) { throw new ArgumentException("The password is not valid!"); }
+            if (string.IsNullOrWhiteSpace(DataManager.LoginCredentials.SecretAnswerHash)) { throw new ArgumentException("The secret answer is not valid!"); }
 
             //Try to login.
             try
             {
                 var loginRequest = new LoginRequest();
-                await loginRequest.LoginAsync(_LoginCredentials.Username, _LoginCredentials.Password, _LoginCredentials.SecretAnswerHash);
+                await loginRequest.LoginAsync(DataManager.LoginCredentials.Username, DataManager.LoginCredentials.Password, DataManager.LoginCredentials.SecretAnswerHash);
                 _IsLoggedIn = true;
             }
             catch (Exception) { _IsLoggedIn = false; }
@@ -658,14 +655,6 @@ namespace FIFAUltimateTeamBot
         #endregion
 
         #region Properties
-        /// <summary>
-        /// The login credentials used to login to Ultimate Team.
-        /// </summary>
-        public static LoginCredentials LoginCredentials
-        {
-            get { return _LoginCredentials; }
-            set { _LoginCredentials = value; }
-        }
         /// <summary>
         /// The trade items that is of interest at the moment. Includes those in the trade pile, watchlist and search.
         /// </summary>

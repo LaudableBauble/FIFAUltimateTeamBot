@@ -26,6 +26,21 @@ namespace FIFAUltimateTeamBot
         /// <summary>
         /// Create a player item.
         /// </summary>
+        public PlayerItem()
+        {
+            _ResourceData = null;
+            _AuctionInfo = new AuctionInfo();
+            _Stats = null;
+            _LastUpdated = DateTime.Now;
+            _Location = TradeItemLocation.Unknown;
+            _IsLocked = false;
+            _Update = false;
+            _Remove = false;
+            _IsAllowedToBeSold = false;
+        }
+        /// <summary>
+        /// Create a player item.
+        /// </summary>
         /// <param name="resourceData">The player's resource data.</param>
         /// <param name="auctionInfo">The player's auction info.</param>
         public PlayerItem(Item resourceData, AuctionInfo auctionInfo)

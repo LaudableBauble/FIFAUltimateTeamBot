@@ -28,8 +28,9 @@ namespace FIFAUltimateTeamBot
         {
             InitializeComponent();
 
-            //Initialize the Request Manager.
-            RequestManager.Initialize(LoadLoginCredentials());
+            //Initialize the managers.
+            DataManager.Initialize(LoadLoginCredentials());
+            RequestManager.Initialize();
 
             //Subscribe to some events.
             ckbTradePile.CheckedChanged += OnCheckedChanged;
