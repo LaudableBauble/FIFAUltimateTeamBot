@@ -48,6 +48,7 @@ namespace FIFAUltimateTeamBot
             RequestManager.OnMoveItems += OnMoveTradeItems;
             RequestManager.OnSellItems += OnSellTradeItems;
             RequestManager.OnRemoveItems += OnRemoveTradeItems;
+            RequestManager.OnSearchItems += OnSearchTradeItems;
 
             //Initialize the GUI.
             SetupList();
@@ -88,6 +89,13 @@ namespace FIFAUltimateTeamBot
         /// </summary>
         public void SetupAuctionSearch()
         {
+            //Add the 'any' alternative.
+            cmbFormation.Items.Add("Any");
+            cmbPosition.Items.Add("Any");
+            cmbNationality.Items.Add("Any");
+            cmbLeague.Items.Add("Any");
+            cmbClub.Items.Add("Any");
+
             //Initialize the dropdown lists.
             foreach (Level item in Enum.GetValues(typeof(Level)).Cast<Level>()) { cmbLevel.Items.Add(item); }
             foreach (Formation item in Formation.GetAll()) { cmbFormation.Items.Add(item); }
@@ -96,6 +104,38 @@ namespace FIFAUltimateTeamBot
             foreach (League item in League.GetAll()) { cmbLeague.Items.Add(item); }
             foreach (Team item in Team.GetAll()) { cmbClub.Items.Add(item); }
 
+            //Auto select the top option.
+            cmbLevel.SelectedIndex = 0;
+            cmbFormation.SelectedIndex = 0;
+            cmbPosition.SelectedIndex = 0;
+            cmbNationality.SelectedIndex = 0;
+            cmbLeague.SelectedIndex = 0;
+            cmbClub.SelectedIndex = 0;
+
+            //Enable the correct settings.
+            lstvAuctionItems.View = View.Details;
+            lstvAuctionItems.LabelEdit = false;
+            lstvAuctionItems.AllowColumnReorder = false;
+            lstvAuctionItems.GridLines = true;
+            lstvAuctionItems.FullRowSelect = true;
+
+            //Reset the list view.
+            lstvAuctionItems.Clear();
+
+            //Add the columns.
+            lstvAuctionItems.Columns.Add("First Name", -2, HorizontalAlignment.Left);
+            lstvAuctionItems.Columns.Add("Last Name", -2, HorizontalAlignment.Left);
+            lstvAuctionItems.Columns.Add("Rating", -2, HorizontalAlignment.Left);
+            lstvAuctionItems.Columns.Add("Position", -2, HorizontalAlignment.Left);
+            lstvAuctionItems.Columns.Add("Card Type", -2, HorizontalAlignment.Left);
+            lstvAuctionItems.Columns.Add("Bid", -2, HorizontalAlignment.Left);
+            lstvAuctionItems.Columns.Add("Time", -2, HorizontalAlignment.Left);
+            lstvAuctionItems.Columns.Add("Pace", -2, HorizontalAlignment.Left);
+            lstvAuctionItems.Columns.Add("Shooting", -2, HorizontalAlignment.Left);
+            lstvAuctionItems.Columns.Add("Passing", -2, HorizontalAlignment.Left);
+            lstvAuctionItems.Columns.Add("Dribbling", -2, HorizontalAlignment.Left);
+            lstvAuctionItems.Columns.Add("Defending", -2, HorizontalAlignment.Left);
+            lstvAuctionItems.Columns.Add("Heading", -2, HorizontalAlignment.Left);
         }
         /// <summary>
         /// Set up the list view.
@@ -139,34 +179,50 @@ namespace FIFAUltimateTeamBot
             //Pause the drawing of the list view until a later date.
             lstvItems.BeginUpdate();
 
-            //Clear the list view.
-            lstvItems.Items.Clear();
+            //Remove all items that are not to be updated.
+            RemoveItems(lstvItems.Items.Cast<ListViewItem>().Select(x => (PlayerItem)x.Tag).Where(y => !items.Contains(y)).ToList());
 
             //For all specified items, either add them to the list.
             foreach (PlayerItem item in items)
             {
-                //Add an item.
-                var lstvItem = new ListViewItem(item.ResourceData.FirstName, 0);
-                lstvItem.Tag = item;
+                //If this item has already been added, just update it. Otherwise create it.
+                ListViewItem lstvItem = lstvItems.Items.Count != 0 ? lstvItems.Items.Cast<ListViewItem>().FirstOrDefault(x => x.Tag == item) : null;
+                if (lstvItem == null)
+                {
+                    //Add an item.
+                    lstvItem = new ListViewItem(item.ResourceData.FirstName, 0);
+                    lstvItem.Tag = item;
 
-                //The data.
-                lstvItem.SubItems.Add(item.ResourceData.LastName);
-                lstvItem.SubItems.Add(item.ResourceData.Rating.ToString());
-                lstvItem.SubItems.Add(item.AuctionInfo.ItemData.PreferredPosition);
-                lstvItem.SubItems.Add(item.ResourceData.CardType.ToString());
-                lstvItem.SubItems.Add(item.Location.ToString());
-                lstvItem.SubItems.Add(item.AuctionInfo.CurrentPrice.ToString());
-                lstvItem.SubItems.Add(item.AuctionInfo.Expires.ToString());
-                lstvItem.SubItems.Add(item.ResourceData.Attribute1.ToString());
-                lstvItem.SubItems.Add(item.ResourceData.Attribute2.ToString());
-                lstvItem.SubItems.Add(item.ResourceData.Attribute3.ToString());
-                lstvItem.SubItems.Add(item.ResourceData.Attribute4.ToString());
-                lstvItem.SubItems.Add(item.ResourceData.Attribute5.ToString());
-                lstvItem.SubItems.Add(item.ResourceData.Attribute6.ToString());
+                    //The data.
+                    lstvItem.SubItems.Add(item.ResourceData.LastName);
+                    lstvItem.SubItems.Add(item.ResourceData.Rating.ToString());
+                    lstvItem.SubItems.Add(item.AuctionInfo.ItemData.PreferredPosition);
+                    lstvItem.SubItems.Add(item.ResourceData.CardType.ToString());
+                    lstvItem.SubItems.Add(item.Location.ToString());
+                    lstvItem.SubItems.Add(item.AuctionInfo.CurrentPrice.ToString());
+                    lstvItem.SubItems.Add(item.AuctionInfo.Expires.ToString());
+                    lstvItem.SubItems.Add(item.ResourceData.Attribute1.ToString());
+                    lstvItem.SubItems.Add(item.ResourceData.Attribute2.ToString());
+                    lstvItem.SubItems.Add(item.ResourceData.Attribute3.ToString());
+                    lstvItem.SubItems.Add(item.ResourceData.Attribute4.ToString());
+                    lstvItem.SubItems.Add(item.ResourceData.Attribute5.ToString());
+                    lstvItem.SubItems.Add(item.ResourceData.Attribute6.ToString());
 
-                //Add the item row to the list view.
-                lstvItems.Items.Add(lstvItem);
+                    //Add the item row to the list view.
+                    lstvItems.Items.Add(lstvItem);
+                }
+                else
+                {
+                    //Just update what's neccessary.
+                    lstvItem.SubItems[5].Text = item.Location.ToString();
+                    lstvItem.SubItems[6].Text = item.AuctionInfo.CurrentPrice.ToString();
+                    lstvItem.SubItems[7].Text = item.AuctionInfo.Expires.ToString();
+                }
             }
+
+            //Auto set the width of the columns.
+            lstvItems.AutoResizeColumns(ColumnHeaderAutoResizeStyle.ColumnContent);
+            lstvItems.AutoResizeColumns(ColumnHeaderAutoResizeStyle.HeaderSize);
 
             //Continue the drawing of the list view now that the update is complete.
             lstvItems.EndUpdate();
@@ -175,12 +231,88 @@ namespace FIFAUltimateTeamBot
             statlblCount.Text = lstvItems.Items.Count + " item(s).";
         }
         /// <summary>
-        /// Update the list of items.
+        /// Load a list of auction items.
         /// </summary>
-        public void UpdateList()
+        public void LoadAuctionList(List<PlayerItem> items)
+        {
+            //Check if this method has been accessed from another thread, ie. not from the GUI thread, and rectify it.
+            if (lstvItems.InvokeRequired) { Invoke((MethodInvoker)(() => LoadAuctionList(items))); return; }
+
+            //Pause the drawing of the list view until a later date.
+            lstvAuctionItems.BeginUpdate();
+
+            //Remove all items that are not to be updated.
+            RemoveItems(lstvAuctionItems.Items.Cast<ListViewItem>().Select(x => (PlayerItem)x.Tag).Where(y => !items.Contains(y)).ToList());
+
+            //For all specified items, either add them to the list.
+            foreach (PlayerItem item in items)
+            {
+                //If this item has already been added, just update it. Otherwise create it.
+                ListViewItem lstvItem = lstvAuctionItems.Items.Count != 0 ? lstvAuctionItems.Items.Cast<ListViewItem>().FirstOrDefault(x => x.Tag == item) : null;
+                if (lstvItem == null)
+                {
+                    //Add an item.
+                    lstvItem = new ListViewItem(item.ResourceData.FirstName, 0);
+                    lstvItem.Tag = item;
+
+                    //The data.
+                    lstvItem.SubItems.Add(item.ResourceData.LastName);
+                    lstvItem.SubItems.Add(item.ResourceData.Rating.ToString());
+                    lstvItem.SubItems.Add(item.AuctionInfo.ItemData.PreferredPosition);
+                    lstvItem.SubItems.Add(item.ResourceData.CardType.ToString());
+                    lstvItem.SubItems.Add(item.AuctionInfo.CurrentPrice.ToString());
+                    lstvItem.SubItems.Add(item.AuctionInfo.Expires.ToString());
+                    lstvItem.SubItems.Add(item.ResourceData.Attribute1.ToString());
+                    lstvItem.SubItems.Add(item.ResourceData.Attribute2.ToString());
+                    lstvItem.SubItems.Add(item.ResourceData.Attribute3.ToString());
+                    lstvItem.SubItems.Add(item.ResourceData.Attribute4.ToString());
+                    lstvItem.SubItems.Add(item.ResourceData.Attribute5.ToString());
+                    lstvItem.SubItems.Add(item.ResourceData.Attribute6.ToString());
+
+                    //Add the item row to the list view.
+                    lstvAuctionItems.Items.Add(lstvItem);
+                }
+                else
+                {
+                    //Just update what's neccessary.
+                    lstvItem.SubItems[5].Text = item.AuctionInfo.CurrentPrice.ToString();
+                    lstvItem.SubItems[6].Text = item.AuctionInfo.Expires.ToString();
+                }
+            }
+
+            //Auto set the width of the columns.
+            lstvAuctionItems.AutoResizeColumns(ColumnHeaderAutoResizeStyle.ColumnContent);
+
+            //Continue the drawing of the list view now that the update is complete.
+            lstvAuctionItems.EndUpdate();
+
+            //Change the item count to reflect the number of items in the selected list.
+            statlblCount.Text = lstvAuctionItems.Items.Count + " item(s).";
+        }
+        /// <summary>
+        /// Remove the items from the list view.
+        /// </summary>
+        /// <param name="items">The items to remove.</param>
+        public void RemoveItems(List<PlayerItem> items)
+        {
+            //Check if this method has been accessed from another thread, ie. not from the GUI thread, and rectify it.
+            if (lstvItems.InvokeRequired) { Invoke((MethodInvoker)(() => RemoveItems(items))); return; }
+
+            //Remove the items.
+            items.ForEach(item =>
+            {
+                //The trade pile.
+                var toRemove = lstvItems.Items.Cast<ListViewItem>().SingleOrDefault(lstvItem => lstvItem.Tag == item);
+                if (toRemove != null) { lstvItems.Items.Remove(toRemove); }
+            });
+        }
+        /// <summary>
+        /// Filter the list of items.
+        /// </summary>
+        public void FilterList()
         {
             //Filter the list of items to display.
-            var items = RequestManager.TradeItems;
+            var items = DataManager.Items.Values;
             items = !ckbTradePile.Checked ? items.Where(item => item.Location != TradeItemLocation.TradePile).ToList() : items;
             items = !ckbWatchList.Checked ? items.Where(item => item.Location != TradeItemLocation.WatchList).ToList() : items;
             items = !ckbClub.Checked ? items.Where(item => item.Location != TradeItemLocation.Club).ToList() : items;
@@ -188,7 +320,7 @@ namespace FIFAUltimateTeamBot
             items = !ckbAuctionItems.Checked ? items.Where(item => item.Location != TradeItemLocation.Auction).ToList() : items;
 
             //Update the list view.
-            LoadList(items);
+            LoadList(items.ToList());
         }
         /// <summary>
         /// Log a piece of text.
@@ -234,7 +366,7 @@ namespace FIFAUltimateTeamBot
         /// </summary>
         public void OnLoadWatchList(List<PlayerItem> tradeItems)
         {
-            UpdateList();
+            FilterList();
 
             //Update the items' stats.
             tradeItems.ForEach(x =>
@@ -253,7 +385,7 @@ namespace FIFAUltimateTeamBot
         /// </summary>
         public void OnLoadUnassigned(List<PlayerItem> tradeItems)
         {
-            UpdateList();
+            FilterList();
 
             //Update the items' stats.
             tradeItems.ForEach(x =>
@@ -272,7 +404,7 @@ namespace FIFAUltimateTeamBot
         /// </summary>
         public void OnLoadClub(List<PlayerItem> tradeItems)
         {
-            UpdateList();
+            FilterList();
 
             //Update the items' stats.
             tradeItems.ForEach(x =>
@@ -291,7 +423,7 @@ namespace FIFAUltimateTeamBot
         /// </summary>
         public void OnUpdateTradeItems(List<PlayerItem> tradeItems)
         {
-            UpdateList();
+            FilterList();
 
             //Log the items.
             Log("Updated " + tradeItems.Count + @" items.\line", true);
@@ -303,7 +435,7 @@ namespace FIFAUltimateTeamBot
         /// </summary>
         public void OnMoveTradeItems(List<PlayerItem> tradeItems)
         {
-            UpdateList();
+            FilterList();
 
             //Log the items.
             Log("Moved " + tradeItems.Count + @" items to trade pile.\line", true);
@@ -316,8 +448,8 @@ namespace FIFAUltimateTeamBot
         public void OnSellTradeItems(List<PlayerItem> tradeItems)
         {
             //These items have been auctioned; log the stats.
-            tradeItems.ForEach(item => item.Stats.TimesAuctioned++);
-            SaveStats(tradeItems);
+            //tradeItems.ForEach(item => item.Stats.TimesAuctioned++);
+            //SaveStats(tradeItems);
 
             //Log the items.
             Log("Auctioned " + tradeItems.Count + @" items.\line", true);
@@ -330,16 +462,24 @@ namespace FIFAUltimateTeamBot
         public void OnRemoveTradeItems(List<PlayerItem> tradeItems)
         {
             //These items have been sold; log the stats.
-            tradeItems.ForEach(item => { item.Stats.Sold = DateTime.Now; item.Stats.SoldFor = (int)item.AuctionInfo.CurrentPrice; });
-            SaveStats(tradeItems);
+            //tradeItems.ForEach(item => { item.Stats.Sold = DateTime.Now; item.Stats.SoldFor = (int)item.AuctionInfo.CurrentPrice; });
+            //SaveStats(tradeItems);
 
-            UpdateList();
+            FilterList();
 
             //Log the items.
             Log("Sold " + tradeItems.Count + @" items.\line", true);
             tradeItems.ForEach(item => Log("\t- " + item.ResourceData.FirstName + " " + item.ResourceData.LastName + " for " +
                 item.AuctionInfo.CurrentPrice + "\t\t\t(" + item.AuctionInfo.TradeId + @")\line",
                 false));
+        }
+        /// <summary>
+        /// If any trade items have been found after an auction search.
+        /// </summary>
+        /// <param name="tradeItems">The found trade items.</param>
+        public void OnSearchTradeItems(List<PlayerItem> tradeItems)
+        {
+            LoadAuctionList(tradeItems);
         }
         /// <summary>
         /// Change the sell state of an item.
@@ -357,7 +497,7 @@ namespace FIFAUltimateTeamBot
         private void OnCheckedChanged(object sender, EventArgs e)
         {
             //Filter the list of items to display.
-            UpdateList();
+            FilterList();
         }
         /// <summary>
         /// If an item in the list view has been selected, display it.
@@ -366,6 +506,9 @@ namespace FIFAUltimateTeamBot
         /// <param name="e"></param>
         private void OnItemSelectionChanged(object sender, EventArgs e)
         {
+            //If no item is selected, stop here.
+            if ((sender as ListView).SelectedItems.Count == 0) { return; }
+
             //Get the item.
             _SelectedItem = (PlayerItem)(sender as ListView).SelectedItems[0].Tag;
 
@@ -396,6 +539,47 @@ namespace FIFAUltimateTeamBot
             //Change the text of the button to reflect the change.
             if (splitItems.Panel2Collapsed) { btnExpandCollapseItem.Text = "<---"; }
             else { btnExpandCollapseItem.Text = "--->"; }
+        }
+        /// <summary>
+        /// Start or stop the bot.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btnMainStart_Click(object sender, EventArgs e)
+        {
+            LogicManager.Start();
+
+            //Log the event.
+            Log(@"Program started!\line", true);
+        }
+        /// <summary>
+        /// Search for auctions.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btnSearch_Click(object sender, EventArgs e)
+        {
+            var page = (uint)numStartPage.Value;
+            var level = (Level)Enum.Parse(typeof(Level), cmbLevel.SelectedItem.ToString());
+            //var formation = !cmbFormation.SelectedItem.Equals("Any") ? Enum.Parse(typeof(Formation), cmbFormation.SelectedItem.ToString());
+
+            //Setup the search parameters.
+            var searchParameters = new PlayerSearchParameters
+            {
+                Page = page,
+                Level = level,
+                Formation = Formation.FourThreeThree,
+                League = League.BarclaysPremierLeague,
+                Nation = Nation.England,
+                Position = Position.Striker,
+                Team = Team.ManchesterUnited
+            };
+
+            //Make the search.
+            RequestManager.SearchItems(searchParameters);
+
+            //Jump to the list of items.
+            tabctrlAuction.SelectedTab = tabAuctionItems;
         }
     }
 }

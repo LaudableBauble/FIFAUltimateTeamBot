@@ -8,7 +8,7 @@ namespace UltimateTeam.Toolkit.Request
 {
     public class SearchRequest : RequestBase
     {
-        private const uint PageSize = 12;
+        private const uint PageSize = 15;
 
         public async Task<AuctionResponse> SearchAsync(SearchParameters parameters)
         {
@@ -20,7 +20,7 @@ namespace UltimateTeam.Toolkit.Request
             var requestMessage = new HttpRequestMessage(HttpMethod.Post, searchUri) { Content = new StringContent(" ") };
 
             requestMessage.Headers.TryAddWithoutValidation("X-UT-SID", SessionId);
-            requestMessage.Headers.TryAddWithoutValidation("x-HTTP-Method-Override", "GET");
+            requestMessage.Headers.TryAddWithoutValidation("X-HTTP-Method-Override", "GET");
 
             var response = await Client.SendAsync(requestMessage);
             response.EnsureSuccessStatusCode();
@@ -33,6 +33,8 @@ namespace UltimateTeam.Toolkit.Request
         private static Uri BuildUri(SearchParameters parameters)
         {
             var uriString = string.Format("https://utas.s2.fut.ea.com/ut/game/fifa13/auctionhouse?start={0}&num={1}",
+                      (parameters.Page - 1) * PageSize, PageSize + 1);
+            uriString = string.Format("https://utas.fut.ea.com/ut/game/fifa13/auctionhouse?start={0}&num={1}",
                       (parameters.Page - 1) * PageSize, PageSize + 1);
 
             parameters.BuildUriString(ref uriString);

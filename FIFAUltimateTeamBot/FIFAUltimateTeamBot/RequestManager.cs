@@ -8,6 +8,7 @@ using UltimateTeam.Toolkit.Model;
 using UltimateTeam.Toolkit.Request;
 using UltimateTeam.Toolkit.Parameter;
 using System.Collections.Concurrent;
+using System.Windows.Forms;
 
 namespace FIFAUltimateTeamBot
 {
@@ -15,8 +16,6 @@ namespace FIFAUltimateTeamBot
     {
         #region Fields
         private static bool _IsLoggedIn;
-        private static bool _IsActive;
-        private static List<PlayerItem> _TradeItems;
         private static LinkedList<Func<Task>> _RequestQueue;
 
         public delegate void TradeItemsEventHandler(List<PlayerItem> tradeItems);
@@ -33,76 +32,19 @@ namespace FIFAUltimateTeamBot
 
         #region Methods
         /// <summary>
-        /// Initialize the request manager, something which includes trying to login.
+        /// Initialize the request manager.
         /// </summary>
         public static void Initialize()
         {
             //Store the user information.
             _IsLoggedIn = false;
-            _IsActive = true;
-            _TradeItems = new List<PlayerItem>();
             _RequestQueue = new LinkedList<Func<Task>>();
-
-            //Login and get all items in the trade pile and watch list. It is important that the first request is to login.
-            Login();
-            LoadTradePile();
-            LoadWatchList();
-            LoadUnassignedItems();
-            LoadClubItems();
-
-            //Start handling requests.
-            ThreadPool.QueueUserWorkItem(obj => Update());
-        }
-        /// <summary>
-        /// The update loop of the request manager. This method is called at initialize and carried on throughout the whole process.
-        /// The request manager cannot function properly without this running.
-        /// </summary>
-        private async static void Update()
-        {
-            //While the request manager is active.
-            while (_IsActive)
-            {
-                //Manage the the list of trade items.
-                _TradeItems.RemoveAll(item => item.Remove && !item.IsLocked);
-
-                //Look for items that need to be updated and do so.
-                if (_TradeItems.Any(item => item.Update && !item.IsLocked)) { UpdateItems(_TradeItems.Where(item => !item.IsLocked).ToList()); }
-
-                //Go through all trade items of interest (ie. those in the TradeItems list) and see if they need to be updated.
-                _TradeItems.Where(item => IsItTimeToUpdate(item) && item.Location == TradeItemLocation.TradePile
-                    && !item.IsLocked).ToList().ForEach(item => item.Update = true);
-
-                //Look for expired items in the trade pile.
-                var isExpired = _TradeItems.Where(item => item.Location == TradeItemLocation.TradePile && item.AuctionInfo.Expires <= 0 && !item.IsLocked);
-                if (isExpired.Count() > 0)
-                {
-                    //Remove all sold items from the trade pile.
-                    var toRemove = isExpired.Where(item => item.AuctionInfo.CurrentPrice != 0);
-                    RemoveItemsFromTradePile(toRemove.ToList());
-
-                    //Relist all expired items that did not get sold. (Make sure that new items are sold for an appropriate sum).
-                    var toRelist = isExpired.Where(item => item.AuctionInfo.CurrentPrice == 0);
-                    foreach (PlayerItem item in toRelist.Where(item => item.AuctionInfo.StartingBid <= 150)) { item.PrepareForAuction(); }
-                    SellItems(toRelist.ToList());
-                }
-
-                //If there is less than 40 items up for sale in the trade pile, try to add some from the watchlist or unassigned items.
-                if (_TradeItems.Count(item => item.Location == TradeItemLocation.TradePile) < 40)
-                {
-                    //Get the watch list and choose which of them to move to the trade pile.
-                    var watchList = _TradeItems.Where(item => item.Location != TradeItemLocation.TradePile && item.IsAllowedToBeSold && !item.IsLocked);
-                    MoveItems(watchList.Take(40 - _TradeItems.Count(item => item.Location == TradeItemLocation.TradePile)).ToList());
-                }
-
-                //Handle all stockpiled requests.
-                await HandleRequestsAsync();
-            }
         }
 
         /// <summary>
         /// Handle all stockpiled request tasks asynchronously and serially.
         /// </summary>
-        private async static Task HandleRequestsAsync()
+        public async static Task HandleRequestsAsync()
         {
             //While there is still requests in the queue, keep going.
             while (_RequestQueue.Count != 0)
@@ -128,35 +70,6 @@ namespace FIFAUltimateTeamBot
                 }
             }
         }
-        /// <summary>
-        /// Check if a player trade item needs to be updated or not.
-        /// </summary>
-        /// <param name="tradeItem">The trade item in question.</param>
-        /// <returns>Whether the trade item needs to be updated or not.</returns>
-        private static bool IsItTimeToUpdate(PlayerItem tradeItem)
-        {
-            //Get the difference in time since the item was last updated.
-            TimeSpan sinceLastUpdate = DateTime.Now.Subtract(tradeItem.LastUpdated);
-
-            //The remaining time for the trade item in seconds.
-            int remainingTime = tradeItem.AuctionInfo.Expires;
-
-            //Depending on how much time the trade item has remaining until it expires, decide whether it should be updated now or not.
-            if (remainingTime > 0)
-            {
-                /* Update every:
-                 * - 2 minutes when over two minuutes left.
-                 * - 5 seconds when less 30 seconds left.
-                 * - 2 seconds when less than 15 seconds left.
-                 */
-                if (remainingTime > 120 && sinceLastUpdate.TotalSeconds > 120) { return true; }
-                if (remainingTime > 15 && remainingTime < 120 && sinceLastUpdate.TotalSeconds > 5) { return true; }
-                if (remainingTime < 15 && sinceLastUpdate.TotalSeconds > 2) { return true; }
-            }
-
-            //Default behaviour.
-            return false;
-        }
 
         /// <summary>
         /// Login to Ultimate Team.
@@ -179,7 +92,7 @@ namespace FIFAUltimateTeamBot
         /// </summary>
         /// <param name="tradeItems">The trade items to remove.</param>
         /// <returns></returns>
-        private static void RemoveItemsFromTradePile(List<PlayerItem> tradeItems)
+        public static void RemoveItemsFromTradePile(List<PlayerItem> tradeItems)
         {
             //Validation check.
             if (!_IsLoggedIn) { throw new ArgumentException("You are not logged in yet!"); }
@@ -273,7 +186,7 @@ namespace FIFAUltimateTeamBot
         {
             //Validation check.
             if (!_IsLoggedIn) { throw new ArgumentException("You have not logged in yet!"); }
-            if (searchParameters != null) { throw new ArgumentException("The search parameters must not be null!"); }
+            if (searchParameters == null) { throw new ArgumentException("The search parameters must not be null!"); }
 
             //Add the search request to the request queue.
             _RequestQueue.AddLast(() => SearchItemsAsync(searchParameters));
@@ -296,7 +209,11 @@ namespace FIFAUltimateTeamBot
                 await loginRequest.LoginAsync(DataManager.LoginCredentials.Username, DataManager.LoginCredentials.Password, DataManager.LoginCredentials.SecretAnswerHash);
                 _IsLoggedIn = true;
             }
-            catch (Exception) { _IsLoggedIn = false; }
+            catch (Exception e)
+            {
+                _IsLoggedIn = false;
+                MessageBox.Show("Login Request\n\nException: " + e.InnerException.ToString() + "\nMessage: " + e.Message + "\n\nStack Trace:\n" + e.StackTrace);
+            }
         }
         /// <summary>
         /// Update the specified trade items by refreshing their auction info and item data.
@@ -317,9 +234,12 @@ namespace FIFAUltimateTeamBot
 
             response.AuctionInfo.ForEach(async auction =>
             {
-                PlayerItem tradeItem = tradeItems.First(item => item.AuctionInfo.TradeId == auction.TradeId);
-                tradeItem.AuctionInfo = auction;
-                if (tradeItem.ResourceData == null) { tradeItem.ResourceData = await new ItemRequest().GetItemAsync(auction.ItemData.ResourceId); }
+                DataManager.AddOrUpdate(auction);
+                //If the item's resource data has not been loaded yet, do so.
+                if (!DataManager.ResourceDataExists(auction.ItemData.ResourceId))
+                {
+                    DataManager.AddOrUpdate(await new ItemRequest().GetItemAsync(auction.ItemData.ResourceId), auction.ItemData.ResourceId);
+                }
             });
 
             //Notify all interested parties.
@@ -330,38 +250,41 @@ namespace FIFAUltimateTeamBot
         /// </summary>
         private async static Task LoadTradePileAsync()
         {
-            //Validation check.
-            if (!_IsLoggedIn) { throw new ArgumentException("You are not logged in yet!"); }
-
-            //Get the trade pile auction info.
-            var response = await new TradeRequest().GetTradePile();
-            List<AuctionInfo> auctions = response.AuctionInfo;
-
-            //If no items were found, stop here.
-            if (auctions.Count == 0) { return; }
-
-            //Get the player info and add to the trade pile.
-            foreach (AuctionInfo auction in response.AuctionInfo)
+            try
             {
-                //Get the player item if it has been loaded before.
-                PlayerItem tradeItem = _TradeItems.Find(item => item.AuctionInfo.ItemData.Id == auction.ItemData.Id);
+                //Validation check.
+                if (!_IsLoggedIn) { throw new ArgumentException("You are not logged in yet!"); }
 
-                //Get the item data.
-                Item itemData = await new ItemRequest().GetItemAsync(auction.ItemData.ResourceId);
+                //Get the trade pile auction info.
+                var response = await new TradeRequest().GetTradePile();
+                List<AuctionInfo> auctions = response.AuctionInfo;
 
-                //If the player item existed before, just update its auction info and item data. Otherwise create one and keep track of it.
-                if (tradeItem != null)
+                //If no items were found, stop here.
+                if (auctions.Count == 0) { return; }
+
+                //Get the player info and add to the trade pile.
+                foreach (AuctionInfo auction in response.AuctionInfo)
                 {
-                    tradeItem.AuctionInfo = auction;
-                    tradeItem.ResourceData = itemData;
-                    tradeItem.Location = TradeItemLocation.TradePile;
-                    tradeItem.IsAllowedToBeSold = true;
-                }
-                else { _TradeItems.Add(new PlayerItem(itemData, auction) { Location = TradeItemLocation.TradePile, IsAllowedToBeSold = true }); }
-            }
+                    //Save the auction data.
+                    var item = DataManager.AddOrUpdate(auction);
 
-            //Notify all interested parties.
-            LoadTradePileEventInvoke(_TradeItems.Where(item => auctions.Any(auction => auction == item.AuctionInfo)).ToList());
+                    //If the item's resource data has not been loaded yet, do so.
+                    if (!DataManager.ResourceDataExists(auction.ItemData.ResourceId))
+                    {
+                        DataManager.AddOrUpdate(await new ItemRequest().GetItemAsync(auction.ItemData.ResourceId), auction.ItemData.ResourceId);
+                    }
+
+                    item.Location = TradeItemLocation.TradePile;
+                    item.IsAllowedToBeSold = true;
+                }
+
+                //Notify all interested parties.
+                LoadTradePileEventInvoke(DataManager.Where(item => auctions.Any(auction => auction == item.AuctionInfo)).ToList());
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show("Trade Pile Request\n\nException: " + e.InnerException.ToString() + "\nMessage: " + e.Message + "\n\nStack Trace:\n" + e.StackTrace);
+            }
         }
         /// <summary>
         /// Load all trade items in the watch pile.
@@ -381,24 +304,20 @@ namespace FIFAUltimateTeamBot
             //Get the player info and add to the watch list.
             foreach (AuctionInfo auction in response.AuctionInfo)
             {
-                //Get the player item if it has been loaded before.
-                PlayerItem tradeItem = _TradeItems.Find(item => item.AuctionInfo.TradeId == auction.TradeId);
+                //Save the auction data.
+                var item = DataManager.AddOrUpdate(auction);
 
-                //Get the item data.
-                Item itemData = await new ItemRequest().GetItemAsync(auction.ItemData.ResourceId);
-
-                //If the player item existed before, just update its auction info and item data. Otherwise create one and keep track of it.
-                if (tradeItem != null)
+                //If the item's resource data has not been loaded yet, do so.
+                if (!DataManager.ResourceDataExists(auction.ItemData.ResourceId))
                 {
-                    tradeItem.AuctionInfo = auction;
-                    tradeItem.ResourceData = itemData;
-                    tradeItem.Location = TradeItemLocation.WatchList;
+                    DataManager.AddOrUpdate(await new ItemRequest().GetItemAsync(auction.ItemData.ResourceId), auction.ItemData.ResourceId);
                 }
-                else { _TradeItems.Add(new PlayerItem(itemData, auction) { Location = TradeItemLocation.WatchList }); }
+
+                item.Location = TradeItemLocation.WatchList;
             }
 
             //Notify all interested parties.
-            LoadWatchListEventInvoke(_TradeItems.Where(item => auctions.Any(auction => auction == item.AuctionInfo)).ToList());
+            LoadWatchListEventInvoke(DataManager.Where(item => auctions.Any(auction => auction == item.AuctionInfo)).ToList());
         }
         /// <summary>
         /// Load all unassigned items.
@@ -408,47 +327,31 @@ namespace FIFAUltimateTeamBot
             //Validation check.
             if (!_IsLoggedIn) { throw new ArgumentException("You are not logged in yet!"); }
 
-            //Get the watch list item data.
+            //Get the item data.
             var response = await new TradeRequest().GetUnassignedItems();
             var itemData = response.ItemData;
 
             //If no items were found, stop here.
             if (itemData.Count == 0) { return; }
 
-            //Get the player info and add to the watch list.
+            //Get the player info.
             foreach (var data in itemData)
             {
-                //Get the player item if it has been loaded before.
-                PlayerItem tradeItem = _TradeItems.Find(item => item.AuctionInfo.ItemData.Id == data.Id);
+                //Save the item data.
+                var item = DataManager.AddOrUpdate(data);
 
-                //Get the resource data.
-                Item resourceData = await new ItemRequest().GetItemAsync(data.ResourceId);
-
-                //If the player item existed before, just update its auction info and item data. Otherwise create one and keep track of it.
-                if (tradeItem != null)
+                //If the item's resource data has not been loaded yet, do so.
+                if (!DataManager.ResourceDataExists(data.ResourceId))
                 {
-                    tradeItem.ResourceData = resourceData;
-                    tradeItem.AuctionInfo.ItemData = data;
-                    tradeItem.AuctionInfo.SellerEstablished = "-1";
-                    tradeItem.Location = TradeItemLocation.Unassigned;
+                    DataManager.AddOrUpdate(await new ItemRequest().GetItemAsync(data.ResourceId), data.ResourceId);
                 }
-                else
-                {
-                    //Create the trade item.
-                    PlayerItem item = new PlayerItem(resourceData, new AuctionInfo()
-                    {
-                        ItemData = data,
-                        SellerEstablished = "-1"
-                    });
-                    item.Location = TradeItemLocation.Unassigned;
 
-                    //Add the item to the list.
-                    _TradeItems.Add(item);
-                }
+                item.Location = TradeItemLocation.Unassigned;
+                item.AuctionInfo.SellerEstablished = "-1";
             }
 
             //Notify all interested parties.
-            LoadUnassignedEventInvoke(_TradeItems.Where(item => itemData.Any(data => data == item.AuctionInfo.ItemData)).ToList());
+            LoadUnassignedEventInvoke(DataManager.Where(item => itemData.Any(data => data == item.AuctionInfo.ItemData)).ToList());
         }
         /// <summary>
         /// Load all player items in the club.
@@ -468,37 +371,21 @@ namespace FIFAUltimateTeamBot
             //Get the player info.
             foreach (var data in itemData)
             {
-                //Get the player item if it has been loaded before.
-                PlayerItem tradeItem = _TradeItems.Find(item => item.AuctionInfo.ItemData.Id == data.Id);
+                //Save the item data.
+                var item = DataManager.AddOrUpdate(data);
 
-                //Get the resource data.
-                Item resourceData = await new ItemRequest().GetItemAsync(data.ResourceId);
-
-                //If the player item existed before, just update its auction info and item data. Otherwise create one and keep track of it.
-                if (tradeItem != null)
+                //If the item's resource data has not been loaded yet, do so.
+                if (!DataManager.ResourceDataExists(data.ResourceId))
                 {
-                    tradeItem.ResourceData = resourceData;
-                    tradeItem.AuctionInfo.ItemData = data;
-                    tradeItem.AuctionInfo.SellerEstablished = "-1";
-                    tradeItem.Location = TradeItemLocation.Club;
+                    DataManager.AddOrUpdate(await new ItemRequest().GetItemAsync(data.ResourceId), data.ResourceId);
                 }
-                else
-                {
-                    //Create the trade item.
-                    PlayerItem item = new PlayerItem(resourceData, new AuctionInfo()
-                    {
-                        ItemData = data,
-                        SellerEstablished = "-1"
-                    });
-                    item.Location = TradeItemLocation.Club;
 
-                    //Add the item to the list.
-                    _TradeItems.Add(item);
-                }
+                item.Location = TradeItemLocation.Club;
+                item.AuctionInfo.SellerEstablished = "-1";
             }
 
             //Notify all interested parties.
-            LoadClubEventInvoke(_TradeItems.Where(item => itemData.Any(data => data == item.AuctionInfo.ItemData)).ToList());
+            LoadClubEventInvoke(DataManager.Where(item => itemData.Any(data => data == item.AuctionInfo.ItemData)).ToList());
         }
         /// <summary>
         /// Move the specified trade items to the trade pile.
@@ -547,22 +434,31 @@ namespace FIFAUltimateTeamBot
         {
             //Validation check.
             if (!_IsLoggedIn) { throw new ArgumentException("You have not logged in yet!"); }
-            if (searchParameters != null) { throw new ArgumentException("The search parameters must not be null!"); }
+            if (searchParameters == null) { throw new ArgumentException("The search parameters must not be null!"); }
 
             //Search for players.
             var response = await new SearchRequest().SearchAsync(searchParameters);
+            List<AuctionInfo> auctions = response.AuctionInfo;
 
-            //The list to return.
-            var items = new List<PlayerItem>();
+            //If no items were found, stop here.
+            if (auctions.Count == 0) { return; }
 
             foreach (AuctionInfo auction in response.AuctionInfo)
             {
-                Item itemData = await new ItemRequest().GetItemAsync(auction.ItemData.ResourceId);
-                items.Add(new PlayerItem(itemData, auction) { Location = TradeItemLocation.Auction });
+                //Save the auction data.
+                var item = DataManager.AddOrUpdate(auction);
+
+                //If the item's resource data has not been loaded yet, do so.
+                if (!DataManager.ResourceDataExists(auction.ItemData.ResourceId))
+                {
+                    DataManager.AddOrUpdate(await new ItemRequest().GetItemAsync(auction.ItemData.ResourceId), auction.ItemData.ResourceId);
+                }
+
+                item.Location = TradeItemLocation.Auction;
             }
 
             //Notify all interested parties.
-            SearchItemsEventInvoke(items);
+            SearchItemsEventInvoke(DataManager.Where(item => auctions.Any(auction => auction == item.AuctionInfo)).ToList());
         }
 
         /// <summary>
@@ -655,13 +551,6 @@ namespace FIFAUltimateTeamBot
         #endregion
 
         #region Properties
-        /// <summary>
-        /// The trade items that is of interest at the moment. Includes those in the trade pile, watchlist and search.
-        /// </summary>
-        public static List<PlayerItem> TradeItems
-        {
-            get { return new List<PlayerItem>(_TradeItems); }
-        }
         #endregion
     }
 }

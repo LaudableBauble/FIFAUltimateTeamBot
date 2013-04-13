@@ -11,7 +11,6 @@ namespace FIFAUltimateTeamBot
     public class PlayerItem
     {
         #region Fields
-        private Item _ResourceData;
         private AuctionInfo _AuctionInfo;
         private StatPackage _Stats;
         private DateTime _LastUpdated;
@@ -28,7 +27,6 @@ namespace FIFAUltimateTeamBot
         /// </summary>
         public PlayerItem()
         {
-            _ResourceData = null;
             _AuctionInfo = new AuctionInfo();
             _Stats = null;
             _LastUpdated = DateTime.Now;
@@ -41,11 +39,9 @@ namespace FIFAUltimateTeamBot
         /// <summary>
         /// Create a player item.
         /// </summary>
-        /// <param name="resourceData">The player's resource data.</param>
         /// <param name="auctionInfo">The player's auction info.</param>
-        public PlayerItem(Item resourceData, AuctionInfo auctionInfo)
+        public PlayerItem(AuctionInfo auctionInfo)
         {
-            _ResourceData = resourceData;
             _AuctionInfo = auctionInfo;
             _Stats = new StatPackage(_AuctionInfo.ItemData.Id);
             _LastUpdated = DateTime.Now;
@@ -84,6 +80,23 @@ namespace FIFAUltimateTeamBot
             else if (_AuctionInfo.ItemData.Rating == 83) { _AuctionInfo.StartingBid = 1200; _AuctionInfo.BuyNowPrice = 1700; }
             else if (_AuctionInfo.ItemData.Rating == 82) { _AuctionInfo.StartingBid = 1000; _AuctionInfo.BuyNowPrice = 1500; }
             if (_AuctionInfo.ItemData.Rating <= 81) { _AuctionInfo.StartingBid = 900; _AuctionInfo.BuyNowPrice = 1300; }
+
+            if (DataManager.ResourceDataExists(_AuctionInfo.ItemData.Id))
+            {
+                if (DataManager.ResourceData[_AuctionInfo.ItemData.Id].LastName.Equals("Sturridge"))
+                {
+                    _AuctionInfo.StartingBid = 3300; _AuctionInfo.BuyNowPrice = 3800;
+                }
+            }
+
+            //Special prices.
+            switch (_AuctionInfo.ItemData.ResourceId)
+            {
+                //Normal Reus.
+                case 1342365630: { _AuctionInfo.StartingBid = 5300; _AuctionInfo.BuyNowPrice = 5900; break; }
+                //Normal Muller.
+                case 1342366876: { _AuctionInfo.StartingBid = 1900; _AuctionInfo.BuyNowPrice = 2500; break; }
+            }
         }
         #endregion
 
@@ -93,8 +106,7 @@ namespace FIFAUltimateTeamBot
         /// </summary>
         public Item ResourceData
         {
-            get { return _ResourceData; }
-            set { _ResourceData = value; }
+            get { return DataManager.ResourceDataExists(_AuctionInfo.ItemData.ResourceId) ? DataManager.ResourceData[_AuctionInfo.ItemData.ResourceId] : null; }
         }
         /// <summary>
         /// The auction information regarding the player. This is data that changes over time and needs to be updated.
