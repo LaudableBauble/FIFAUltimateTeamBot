@@ -5,9 +5,11 @@ using System.Net.Http;
 using System.Xml.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using UltimateTeam.Toolkit.Constant;
 using UltimateTeam.Toolkit.Extension;
 using UltimateTeam.Toolkit.Model;
 using UltimateTeam.Toolkit.Service;
+using HttpMethod = System.Net.Http.HttpMethod;
 
 namespace UltimateTeam.Toolkit.Request
 {
@@ -56,9 +58,7 @@ namespace UltimateTeam.Toolkit.Request
             var response = await Client.SendAsync(requestMessage);
             response.EnsureSuccessStatusCode();
 
-            var validateResponse = JsonDeserializer.Deserialize<ValidateResponse>(await response.Content.ReadAsStreamAsync());
-
-            return validateResponse;
+            return await Deserialize<ValidateResponse>(response);
         }
 
         private async Task<AuthenticationResponse> AuthenticationRequestAsync(LoginResponse loginResponse, Persona persona)
@@ -75,7 +75,7 @@ namespace UltimateTeam.Toolkit.Request
             var response = await Client.PostAsync(authUrl, new StringContent(authJson, Encoding.UTF8, "application/json"));
             response.EnsureSuccessStatusCode();
 
-            var authResponse = JsonDeserializer.Deserialize<AuthenticationResponse>(await response.Content.ReadAsStreamAsync());
+            var authResponse = await Deserialize<AuthenticationResponse>(response);
             SessionId = authResponse.SessionId;
 
             return authResponse;
@@ -91,7 +91,7 @@ namespace UltimateTeam.Toolkit.Request
             var response = await Client.GetAsync(accountUrl);
             response.EnsureSuccessStatusCode();
 
-            var accounts = JsonDeserializer.Deserialize<UserAccounts>(await response.Content.ReadAsStreamAsync());
+            var accounts = await Deserialize<UserAccounts>(response);
             var persona = accounts.UserAccountInfo.Personas.First();
 
             return persona;
@@ -111,15 +111,12 @@ namespace UltimateTeam.Toolkit.Request
 
         private async Task<LoginResponse> LoginRequestAsync(string username, string password)
         {
-            var loginUrl = new Uri("https://www.ea.com/uk/football/services/authenticate/login");
-            loginUrl = new Uri("https://www.ea.com/intl/football/services/authenticate/login");
-
-            Client.DefaultRequestHeaders.Add("Referer", "http://www.ea.com/intl/football/login");
-
+            var loginUrl = new Uri(Resources.Login);
             var content = new FormUrlEncodedContent(new Dictionary<string, string>
             {
                 { "email", username },
-                { "password", password }
+                { "password", password },
+                { "stay-signed", "ON"}
             });
 
             var response = await Client.PostAsync(loginUrl, content);

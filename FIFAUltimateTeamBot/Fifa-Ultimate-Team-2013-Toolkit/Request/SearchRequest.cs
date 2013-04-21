@@ -25,9 +25,7 @@ namespace UltimateTeam.Toolkit.Request
             var response = await Client.SendAsync(requestMessage);
             response.EnsureSuccessStatusCode();
 
-            var auctionResponse = JsonDeserializer.Deserialize<AuctionResponse>(await response.Content.ReadAsStreamAsync());
-
-            return auctionResponse;
+            return await Deserialize<AuctionResponse>(response);
         }
 
         private static Uri BuildUri(SearchParameters parameters)

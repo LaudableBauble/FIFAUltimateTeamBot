@@ -8,6 +8,9 @@ using UltimateTeam.Toolkit.Model;
 using UltimateTeam.Toolkit.Request;
 using UltimateTeam.Toolkit.Parameter;
 using System.Collections.Concurrent;
+using System.IO;
+using System.Xml;
+using System.Xml.Serialization;
 
 namespace FIFAUltimateTeamBot
 {
@@ -21,6 +24,7 @@ namespace FIFAUltimateTeamBot
         private static LoginCredentials _LoginCredentials;
         private static ConcurrentDictionary<long, PlayerItem> _Items;
         private static ConcurrentDictionary<long, Item> _ResourceData;
+        private static ConcurrentDictionary<long, StatPackage> _Statistics;
         #endregion
 
         #region Indexes
@@ -40,6 +44,7 @@ namespace FIFAUltimateTeamBot
             _LoginCredentials = loginCredentials;
             _Items = new ConcurrentDictionary<long, PlayerItem>();
             _ResourceData = new ConcurrentDictionary<long, Item>();
+            _Statistics = new ConcurrentDictionary<long, StatPackage>();
         }
 
         /// <summary>
@@ -89,6 +94,23 @@ namespace FIFAUltimateTeamBot
             }
 
             return item;
+        }
+        /// <summary>
+        /// Add or update an item's statistics.
+        /// Statistics exist for every item the bot has access to.
+        /// </summary>
+        /// <param name="statPackage">The item stats to add or update.</param>
+        public static StatPackage AddOrUpdate(StatPackage statPackage)
+        {
+            //If the stats already exists, just update it. Otherwise add it from scratch.
+            if (StatisticsExists(statPackage.ItemID)) { _Statistics[statPackage.ItemID] = statPackage; }
+            else
+            {
+                //Add the item to the list.
+                _Statistics.TryAdd(statPackage.ItemID, statPackage);
+            }
+
+            return statPackage;
         }
         /// <summary>
         /// Add or update an item's resource data.
@@ -191,6 +213,84 @@ namespace FIFAUltimateTeamBot
             Item item;
             return _ResourceData.TryGetValue(resourceId, out item);
         }
+        /// <summary>
+        /// Whether certain statistics exists.
+        /// </summary>
+        /// <param name="id">The id of the statistics to look for.</param>
+        /// <returns>Whether the statistics exists or not.</returns>
+        public static bool StatisticsExists(long id)
+        {
+            StatPackage stats;
+            return _Statistics.TryGetValue(id, out stats);
+        }
+        /// <summary>
+        /// Get the statistics for a certain item.
+        /// </summary>
+        /// <param name="id">The id of the item.</param>
+        /// <returns>The stat package.</returns>
+        public static StatPackage GetStat(long id)
+        {
+            if (StatisticsExists(id)) { return _Statistics[id]; }
+            else { return new StatPackage() { ItemID = id }; }
+        }
+
+        /// <summary>
+        /// Load the stats of all items.
+        /// </summary>
+        public static List<StatPackage> LoadStats()
+        {
+            return (List<StatPackage>)new XmlSerializer(typeof(List<StatPackage>)).Deserialize(new XmlTextReader(@"Data\stats.xml"));
+        }
+        /// <summary>
+        /// Save the updated stats of a certain set of items.
+        /// </summary>
+        public static void SaveStats()
+        {
+            try
+            {
+                //Load all the stats and update the one of interest.
+                /*var stats = LoadStats();
+                foreach (var item in _Statistics.Values.ToList())
+                {
+                    var s = stats.Find(x => x.ItemID == item.ItemID);
+                    if (s != null) { s = item; }
+                    else { stats.Add(item); }
+                }*/
+                new XmlSerializer(typeof(List<StatPackage>)).Serialize(new XmlTextWriter(@"Data\stats.xml", null), _Statistics.Values.ToList());
+            }
+            catch (IOException e)
+            {
+
+            }
+        }
+        /// <summary>
+        /// Load the resource data of all items.
+        /// </summary>
+        public static List<KeyValuePair<long, Item>> LoadResourceData()
+        {
+            return (List<KeyValuePair<long, Item>>)new XmlSerializer(typeof(List<KeyValuePair<long, Item>>)).Deserialize(new XmlTextReader(@"Data\resourceData.xml"));
+        }
+        /// <summary>
+        /// Save the resource data to disk.
+        /// </summary>
+        public static void SaveResourceData()
+        {
+            try
+            {
+                //Load all the data and update the ones of interest.
+                /*var resourceData = LoadResourceData();
+                foreach (var item in _ResourceData.Values.ToList())
+                {
+                    var data = resourceData.Find(x => x.ClubId == item.ClubId && x.LastName.Equals(item.LastName));
+                    if (data != null) { data = item; }
+                    else { resourceData.Add(item); }
+                }*/
+                var resources = new List<KeyValuePair<long, Item>>();
+                _ResourceData.ToList().ForEach(x => resources.Add(new KeyValuePair<long, Item>() { Key = x.Key, Value = x.Value }));
+                new XmlSerializer(typeof(List<KeyValuePair<long, Item>>)).Serialize(new XmlTextWriter(@"Data\resourceData.xml", null), resources);
+            }
+            catch (IOException) { }
+        }
         #endregion
 
         #region Properties
@@ -216,6 +316,13 @@ namespace FIFAUltimateTeamBot
         public static ConcurrentDictionary<long, Item> ResourceData
         {
             get { return new ConcurrentDictionary<long, Item>(_ResourceData); }
+        }
+        /// <summary>
+        /// The statistics. The key is the item id.
+        /// </summary>
+        public static ConcurrentDictionary<long, StatPackage> Statistics
+        {
+            get { return new ConcurrentDictionary<long, StatPackage>(_Statistics); }
         }
         #endregion
     }

@@ -40,6 +40,7 @@
             this.btnExpandCollapseItem = new System.Windows.Forms.Button();
             this.splitItems = new System.Windows.Forms.SplitContainer();
             this.lstvItems = new System.Windows.Forms.ListView();
+            this.lblTimesAuctioned = new System.Windows.Forms.Label();
             this.ckbCanBeSold = new System.Windows.Forms.CheckBox();
             this.lblItemName = new System.Windows.Forms.Label();
             this.ckbAuctionItems = new System.Windows.Forms.CheckBox();
@@ -88,6 +89,9 @@
             this.rtxbLog = new System.Windows.Forms.RichTextBox();
             this.statMain = new System.Windows.Forms.StatusStrip();
             this.statlblCount = new System.Windows.Forms.ToolStripStatusLabel();
+            this.lblCredits = new System.Windows.Forms.Label();
+            this.lblInfoItems = new System.Windows.Forms.Label();
+            this.lblInfoStats = new System.Windows.Forms.Label();
             this.mnuMain.SuspendLayout();
             this.tabctrlMain.SuspendLayout();
             this.tabInfo.SuspendLayout();
@@ -168,6 +172,8 @@
             // 
             // tabInfo
             // 
+            this.tabInfo.Controls.Add(this.lblInfoStats);
+            this.tabInfo.Controls.Add(this.lblInfoItems);
             this.tabInfo.Controls.Add(this.btnMainStart);
             this.tabInfo.Location = new System.Drawing.Point(4, 22);
             this.tabInfo.Name = "tabInfo";
@@ -223,6 +229,7 @@
             // 
             // splitItems.Panel2
             // 
+            this.splitItems.Panel2.Controls.Add(this.lblTimesAuctioned);
             this.splitItems.Panel2.Controls.Add(this.ckbCanBeSold);
             this.splitItems.Panel2.Controls.Add(this.lblItemName);
             this.splitItems.Size = new System.Drawing.Size(870, 432);
@@ -237,6 +244,15 @@
             this.lstvItems.Size = new System.Drawing.Size(615, 432);
             this.lstvItems.TabIndex = 1;
             this.lstvItems.UseCompatibleStateImageBehavior = false;
+            // 
+            // lblTimesAuctioned
+            // 
+            this.lblTimesAuctioned.AutoSize = true;
+            this.lblTimesAuctioned.Location = new System.Drawing.Point(3, 157);
+            this.lblTimesAuctioned.Name = "lblTimesAuctioned";
+            this.lblTimesAuctioned.Size = new System.Drawing.Size(35, 13);
+            this.lblTimesAuctioned.TabIndex = 8;
+            this.lblTimesAuctioned.Text = "label1";
             // 
             // ckbCanBeSold
             // 
@@ -707,11 +723,39 @@
             this.statlblCount.Size = new System.Drawing.Size(67, 17);
             this.statlblCount.Text = "Item Count";
             // 
+            // lblCredits
+            // 
+            this.lblCredits.AutoSize = true;
+            this.lblCredits.Location = new System.Drawing.Point(743, 9);
+            this.lblCredits.Name = "lblCredits";
+            this.lblCredits.Size = new System.Drawing.Size(42, 13);
+            this.lblCredits.TabIndex = 1;
+            this.lblCredits.Text = "Credits:";
+            // 
+            // lblInfoItems
+            // 
+            this.lblInfoItems.AutoSize = true;
+            this.lblInfoItems.Location = new System.Drawing.Point(21, 27);
+            this.lblInfoItems.Name = "lblInfoItems";
+            this.lblInfoItems.Size = new System.Drawing.Size(32, 13);
+            this.lblInfoItems.TabIndex = 1;
+            this.lblInfoItems.Text = "Items";
+            // 
+            // lblInfoStats
+            // 
+            this.lblInfoStats.AutoSize = true;
+            this.lblInfoStats.Location = new System.Drawing.Point(409, 27);
+            this.lblInfoStats.Name = "lblInfoStats";
+            this.lblInfoStats.Size = new System.Drawing.Size(32, 13);
+            this.lblInfoStats.TabIndex = 2;
+            this.lblInfoStats.Text = "Items";
+            // 
             // Main
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(884, 562);
+            this.Controls.Add(this.lblCredits);
             this.Controls.Add(this.statMain);
             this.Controls.Add(this.tabctrlMain);
             this.Controls.Add(this.mnuMain);
@@ -722,6 +766,7 @@
             this.mnuMain.PerformLayout();
             this.tabctrlMain.ResumeLayout(false);
             this.tabInfo.ResumeLayout(false);
+            this.tabInfo.PerformLayout();
             this.tabItems.ResumeLayout(false);
             this.tabItems.PerformLayout();
             this.splitItems.Panel1.ResumeLayout(false);
@@ -820,6 +865,10 @@
         private System.Windows.Forms.Label lblAuctionItemName;
         private System.Windows.Forms.TabPage tabInfo;
         private System.Windows.Forms.Button btnMainStart;
+        private System.Windows.Forms.Label lblCredits;
+        private System.Windows.Forms.Label lblTimesAuctioned;
+        private System.Windows.Forms.Label lblInfoItems;
+        private System.Windows.Forms.Label lblInfoStats;
     }
 }
 

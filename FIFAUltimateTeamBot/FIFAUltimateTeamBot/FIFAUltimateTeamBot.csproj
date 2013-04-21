@@ -45,6 +45,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="KeyValuePair.cs" />
     <Compile Include="LogicManager.cs" />
     <Compile Include="DataManager.cs" />
     <Compile Include="StatPackage.cs" />

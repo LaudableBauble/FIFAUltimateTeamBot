@@ -46,13 +46,15 @@ namespace FIFAUltimateTeamBot
             RequestManager.OnLoadClub += OnLoadClub;
             RequestManager.OnUpdateItems += OnUpdateTradeItems;
             RequestManager.OnMoveItems += OnMoveTradeItems;
-            RequestManager.OnSellItems += OnSellTradeItems;
+            RequestManager.OnAuctionItems += OnAuctionTradeItems;
             RequestManager.OnRemoveItems += OnRemoveTradeItems;
             RequestManager.OnSearchItems += OnSearchTradeItems;
+            RequestManager.OnLoadCredits += OnLoadCredits;
 
             //Initialize the GUI.
             SetupList();
             SetupAuctionSearch();
+            UpdateInfoStats();
         }
 
         /// <summary>
@@ -61,28 +63,6 @@ namespace FIFAUltimateTeamBot
         public LoginCredentials LoadLoginCredentials()
         {
             return (LoginCredentials)new XmlSerializer(typeof(LoginCredentials)).Deserialize(new XmlTextReader(@"Data\login.xml"));
-        }
-        /// <summary>
-        /// Load the stats of all items.
-        /// </summary>
-        public List<StatPackage> LoadStats()
-        {
-            return (List<StatPackage>)new XmlSerializer(typeof(List<StatPackage>)).Deserialize(new XmlTextReader(@"Data\stats.xml"));
-        }
-        /// <summary>
-        /// Save the updated stats of a certain set of items.
-        /// </summary>
-        public void SaveStats(List<PlayerItem> items)
-        {
-            //Load all the stats and update the one of interest.
-            var stats = LoadStats();
-            foreach (var item in items.Select(item => item.Stats))
-            {
-                var s = stats.Find(x => x.ItemID == item.ItemID);
-                if (s != null) { s = item; }
-                else { stats.Add(item); }
-            }
-            //new XmlSerializer(typeof(List<StatPackage>)).Serialize(new XmlTextWriter(@"Data\stats.xml", null), stats);
         }
         /// <summary>
         /// Setup everything to do with the auction search's GUI.
@@ -343,19 +323,71 @@ namespace FIFAUltimateTeamBot
             //Save the text to the log file.
             File.AppendAllText(@"Data\log.txt", text);
         }
+        /// <summary>
+        /// Update the front page info stats.
+        /// </summary>
+        public void UpdateInfoStats()
+        {
+            try
+            {
+                //Check if this method has been accessed from another thread, ie. not from the GUI thread, and rectify it.
+                if (lblInfoItems.InvokeRequired) { Invoke((MethodInvoker)(() => UpdateInfoStats())); return; }
+
+                //Get the data.
+                var items = DataManager.Items.Values.ToList();
+                var trade = items.Count(x => x.Location == TradeItemLocation.TradePile);
+                var watch = items.Count(x => x.Location == TradeItemLocation.WatchList);
+                var unassigned = items.Count(x => x.Location == TradeItemLocation.Unassigned);
+                var club = items.Count(x => x.Location == TradeItemLocation.Club);
+                var spent = 0;
+                items.ForEach(x => spent += (int)x.AuctionInfo.ItemData.LastSalePrice);
+
+                //Populate the label with text.
+                lblInfoItems.Text = "You own " + (trade + watch + unassigned + club) + " item(s):" +
+                    "\n     - " + trade + " in the Trade Pile." +
+                        "\n     - " + watch + " in the Watch List." +
+                        "\n     - " + unassigned + " in the Unassigned Pile." +
+                        "\n     - " + club + " in the Club." +
+                        "\n\nThey are worth (ie. you have spent) " + spent + " coins on them." +
+                        "\nYour total wealth is thus " + (spent + int.Parse(lblCredits.Text.Split(' ')[1])) + " coins.";
+
+                //Get the data.
+                var stats = DataManager.Statistics.Values.ToList();
+                var sold = stats.Count(x => x.Sold.Year > 1);
+                var soldFor = 0;
+                stats.ForEach(x => soldFor += (int)x.SoldFor);
+                var first = stats.Where(x => x.Sold.Year > 1).OrderBy(x => x.Sold).ToList();
+                var days = first != null ? (int)Math.Ceiling(DateTime.Now.Subtract(first[0].Sold).TotalDays) : 1;
+                lblInfoStats.Text = "A total of " + sold + " players have been sold for a collective sum of " +
+                    soldFor + " coins (" + (soldFor / days) + " coins/day)." + "\n\nTop five sold players:";
+
+                //The toplist.
+                var toplist = new Dictionary<long, int>();
+                foreach (var playerSold in stats.Where(x => x.Sold.Year > 1))
+                {
+                    if (toplist.ContainsKey(playerSold.ResourceID)) { toplist[playerSold.ResourceID]++; }
+                    else { toplist.Add(playerSold.ResourceID, 1); }
+                }
+                int count = 0;
+                foreach (var i in toplist.ToList().OrderBy(x => x.Value).Reverse())
+                {
+                    if (count >= 5) { break; }
+
+                    var name = DataManager.ResourceDataExists(i.Key) ? DataManager.ResourceData[i.Key].FirstName + " " +
+                        DataManager.ResourceData[i.Key].LastName : "invalid";
+                    lblInfoStats.Text += "\n     - " + name + " (" + i.Value + ")";
+
+                    count++;
+                }
+            }
+            catch { }
+        }
 
         /// <summary>
         /// The trade pile has been loaded, display the changes on the list view as well.
         /// </summary>
         public void OnLoadTradePile(List<PlayerItem> tradeItems)
         {
-            //Update the items' stats.
-            tradeItems.ForEach(x =>
-            {
-                var stats = LoadStats().Find(y => x.AuctionInfo.ItemData.Id == y.ItemID);
-                x.Stats = stats != null ? stats : x.Stats;
-            });
-
             //Log the items.
             Log("Loaded " + tradeItems.Count + @" items from the Trade Pile.\line", true);
             /*tradeItems.ForEach(item => Log("\t- " + item.ItemData.FirstName + " " + item.ItemData.LastName + "\t\t\t(" + item.AuctionInfo.ItemData.Id + @")\line",
@@ -367,13 +399,6 @@ namespace FIFAUltimateTeamBot
         public void OnLoadWatchList(List<PlayerItem> tradeItems)
         {
             FilterList();
-
-            //Update the items' stats.
-            tradeItems.ForEach(x =>
-            {
-                var stats = LoadStats().Find(y => x.AuctionInfo.ItemData.Id == y.ItemID);
-                x.Stats = stats != null ? stats : x.Stats;
-            });
 
             //Log the items.
             Log("Loaded " + tradeItems.Count + @" items from the Watch List.\line", true);
@@ -387,13 +412,6 @@ namespace FIFAUltimateTeamBot
         {
             FilterList();
 
-            //Update the items' stats.
-            tradeItems.ForEach(x =>
-            {
-                var stats = LoadStats().Find(y => x.AuctionInfo.ItemData.Id == y.ItemID);
-                x.Stats = stats != null ? stats : x.Stats;
-            });
-
             //Log the items.
             Log("Loaded " + tradeItems.Count + @" unassigned items.\line", true);
             /*tradeItems.ForEach(item => Log("\t- " + item.ItemData.FirstName + " " + item.ItemData.LastName + "\t\t\t(" + item.AuctionInfo.ItemData.Id + @")\line",
@@ -406,13 +424,6 @@ namespace FIFAUltimateTeamBot
         {
             FilterList();
 
-            //Update the items' stats.
-            tradeItems.ForEach(x =>
-            {
-                var stats = LoadStats().Find(y => x.AuctionInfo.ItemData.Id == y.ItemID);
-                x.Stats = stats != null ? stats : x.Stats;
-            });
-
             //Log the items.
             Log("Loaded " + tradeItems.Count + @" items from the Club.\line", true);
             /*tradeItems.ForEach(item => Log("\t- " + item.ItemData.FirstName + " " + item.ItemData.LastName + "\t\t\t(" + item.AuctionInfo.ItemData.Id + @")\line",
@@ -424,6 +435,23 @@ namespace FIFAUltimateTeamBot
         public void OnUpdateTradeItems(List<PlayerItem> tradeItems)
         {
             FilterList();
+
+            //These items have been updated; make sure their stats are also up to date.
+            foreach (var item in tradeItems)
+            {
+                //Get the stats and update them if necessary.
+                var stats = DataManager.GetStat(item.AuctionInfo.ItemData.Id);
+                if (stats.Acquired.Year <= 1)
+                {
+                    stats.ResourceID = item.AuctionInfo.ItemData.ResourceId;
+                    stats.Acquired = DateTime.Now;
+                    stats.AcquiredFor = (int)item.AuctionInfo.ItemData.LastSalePrice;
+                    DataManager.AddOrUpdate(stats);
+                }
+            }
+
+            //Update the front page stats.
+            UpdateInfoStats();
 
             //Log the items.
             Log("Updated " + tradeItems.Count + @" items.\line", true);
@@ -445,11 +473,15 @@ namespace FIFAUltimateTeamBot
         /// <summary>
         /// If any trade items have been auctioned, log them.
         /// </summary>
-        public void OnSellTradeItems(List<PlayerItem> tradeItems)
+        public void OnAuctionTradeItems(List<PlayerItem> tradeItems)
         {
             //These items have been auctioned; log the stats.
-            //tradeItems.ForEach(item => item.Stats.TimesAuctioned++);
-            //SaveStats(tradeItems);
+            foreach (var item in tradeItems)
+            {
+                //Get the stats and update them.
+                var stats = DataManager.GetStat(item.AuctionInfo.ItemData.Id);
+                stats.TimesAuctioned++;
+            }
 
             //Log the items.
             Log("Auctioned " + tradeItems.Count + @" items.\line", true);
@@ -462,8 +494,16 @@ namespace FIFAUltimateTeamBot
         public void OnRemoveTradeItems(List<PlayerItem> tradeItems)
         {
             //These items have been sold; log the stats.
-            //tradeItems.ForEach(item => { item.Stats.Sold = DateTime.Now; item.Stats.SoldFor = (int)item.AuctionInfo.CurrentPrice; });
-            //SaveStats(tradeItems);
+            foreach (var item in tradeItems)
+            {
+                //Get the stats and update them.
+                var stats = DataManager.GetStat(item.AuctionInfo.ItemData.Id);
+                stats.Sold = DateTime.Now;
+                stats.SoldFor = (int)item.AuctionInfo.CurrentPrice;
+            }
+
+            //Update the front page stats.
+            UpdateInfoStats();
 
             FilterList();
 
@@ -480,6 +520,18 @@ namespace FIFAUltimateTeamBot
         public void OnSearchTradeItems(List<PlayerItem> tradeItems)
         {
             LoadAuctionList(tradeItems);
+        }
+        /// <summary>
+        /// If the amount of credits and unopened packs have been loaded, display them.
+        /// </summary>
+        /// <param name="credits">The amount of credits and unopened packs.</param>
+        public void OnLoadCredits(CreditsResponse credits)
+        {
+            //Check if this method has been accessed from another thread, ie. not from the GUI thread, and rectify it.
+            if (lblCredits.InvokeRequired) { Invoke((MethodInvoker)(() => OnLoadCredits(credits))); return; }
+
+            //Update the label.
+            lblCredits.Text = "Credits: " + credits.Credits;
         }
         /// <summary>
         /// Change the sell state of an item.
@@ -514,6 +566,10 @@ namespace FIFAUltimateTeamBot
 
             //Display the full name.
             lblItemName.Text = _SelectedItem.ResourceData.FirstName + " " + _SelectedItem.ResourceData.LastName;
+
+            //Display some statistics.
+            lblTimesAuctioned.Text = "Times Auctioned: " + DataManager.GetStat(_SelectedItem.AuctionInfo.ItemData.Id).TimesAuctioned;
+
             //Whether the item is allowed to be sold or not.
             ckbCanBeSold.Checked = _SelectedItem.IsAllowedToBeSold;
         }
@@ -547,7 +603,11 @@ namespace FIFAUltimateTeamBot
         /// <param name="e"></param>
         private void btnMainStart_Click(object sender, EventArgs e)
         {
+            //Start the bot.
             LogicManager.Start();
+
+            //Jump to the log.
+            tabctrlMain.SelectedIndex = 3;
 
             //Log the event.
             Log(@"Program started!\line", true);
@@ -561,18 +621,22 @@ namespace FIFAUltimateTeamBot
         {
             var page = (uint)numStartPage.Value;
             var level = (Level)Enum.Parse(typeof(Level), cmbLevel.SelectedItem.ToString());
-            //var formation = !cmbFormation.SelectedItem.Equals("Any") ? Enum.Parse(typeof(Formation), cmbFormation.SelectedItem.ToString());
+            var formation = cmbFormation.SelectedItem.Equals("Any") ? null : (Formation)cmbFormation.SelectedItem;
+            var league = cmbFormation.SelectedItem.Equals("Any") ? null : (League)cmbLeague.SelectedItem;
+            var nation = cmbNationality.SelectedItem.Equals("Any") ? null : (Nation)cmbNationality.SelectedItem;
+            var position = cmbPosition.SelectedItem.Equals("Any") ? null : (Position)cmbPosition.SelectedItem;
+            var team = cmbClub.SelectedItem.Equals("Any") ? null : (Team)cmbClub.SelectedItem;
 
             //Setup the search parameters.
             var searchParameters = new PlayerSearchParameters
             {
                 Page = page,
                 Level = level,
-                Formation = Formation.FourThreeThree,
-                League = League.BarclaysPremierLeague,
-                Nation = Nation.England,
-                Position = Position.Striker,
-                Team = Team.ManchesterUnited
+                Formation = formation != null ? formation.Value : "",
+                League = league != null ? league.Value : 0,
+                Nation = nation != null ? nation.Value : 0,
+                Position = position != null ? position.Value : "",
+                Team = team != null ? team.Value : 0
             };
 
             //Make the search.

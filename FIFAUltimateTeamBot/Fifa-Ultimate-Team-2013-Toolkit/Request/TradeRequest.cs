@@ -24,9 +24,7 @@ namespace UltimateTeam.Toolkit.Request
             var response = await Client.SendAsync(requestMessage);
             response.EnsureSuccessStatusCode();
 
-            var auctionResponse = JsonDeserializer.Deserialize<AuctionResponse>(await response.Content.ReadAsStreamAsync());
-
-            return auctionResponse;
+            return await Deserialize<AuctionResponse>(response);
         }
         /// <summary>
         /// Get all items in the trade pile.
@@ -46,9 +44,7 @@ namespace UltimateTeam.Toolkit.Request
             var response = await Client.SendAsync(requestMessage);
             response.EnsureSuccessStatusCode();
 
-            var auctionResponse = JsonDeserializer.Deserialize<AuctionResponse>(await response.Content.ReadAsStreamAsync());
-
-            return auctionResponse;
+            return await Deserialize<AuctionResponse>(response);
         }
         /// <summary>
         /// Get all items in the watch list.
@@ -68,9 +64,7 @@ namespace UltimateTeam.Toolkit.Request
             var response = await Client.SendAsync(requestMessage);
             response.EnsureSuccessStatusCode();
 
-            var auctionResponse = JsonDeserializer.Deserialize<AuctionResponse>(await response.Content.ReadAsStreamAsync());
-
-            return auctionResponse;
+            return await Deserialize<AuctionResponse>(response);
         }
         /// <summary>
         /// Get all items in the watch list.
@@ -89,9 +83,7 @@ namespace UltimateTeam.Toolkit.Request
             var response = await Client.SendAsync(requestMessage);
             response.EnsureSuccessStatusCode();
 
-            var auctionResponse = JsonDeserializer.Deserialize<ItemDataResponse>(await response.Content.ReadAsStreamAsync());
-
-            return auctionResponse;
+            return await Deserialize<ItemDataResponse>(response);
         }
         /// <summary>
         /// Get all player items in the club.
@@ -110,9 +102,7 @@ namespace UltimateTeam.Toolkit.Request
             var response = await Client.SendAsync(requestMessage);
             response.EnsureSuccessStatusCode();
 
-            var auctionResponse = JsonDeserializer.Deserialize<ItemDataResponse>(await response.Content.ReadAsStreamAsync());
-
-            return auctionResponse;
+            return await Deserialize<ItemDataResponse>(response);
         }
         /// <summary>
         /// Move item to trade pile.

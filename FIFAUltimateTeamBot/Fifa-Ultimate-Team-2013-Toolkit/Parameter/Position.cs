@@ -5,43 +5,24 @@ namespace UltimateTeam.Toolkit.Parameter
     public class Position : SearchParameterBase<string>
     {
         public const string Defenders = "defense";
-
         public const string Midfielders = "midfield";
-
         public const string Attackers = "attacker";
-
         public const string GoalKeeper = "GK";
-
         public const string RightWingBack = "RWB";
-
         public const string RightBack = "RB";
-
         public const string CenterBack = "CB";
-
         public const string LeftBack = "LB";
-
         public const string LeftWingBack = "LWB";
-
         public const string CentralDefensiveMidfielder = "CDM";
-
         public const string RightMidfielder = "RM";
-
         public const string CentralMidfielder = "CM";
-
         public const string LeftMidfielder = "LM";
-
         public const string CentralAttackingMidfielder = "CAM";
-
         public const string RightForward = "RF";
-
         public const string CentralForward = "CF";
-
         public const string LeftForward = "LF";
-
         public const string RightWinger = "RW";
-
         public const string Striker = "ST";
-
         public const string LeftWinger = "LW";
 
         private Position(string descripton, string value)

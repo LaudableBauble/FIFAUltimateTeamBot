@@ -12,7 +12,6 @@ namespace FIFAUltimateTeamBot
     {
         #region Fields
         private AuctionInfo _AuctionInfo;
-        private StatPackage _Stats;
         private DateTime _LastUpdated;
         private TradeItemLocation _Location;
         private bool _IsLocked;
@@ -28,7 +27,6 @@ namespace FIFAUltimateTeamBot
         public PlayerItem()
         {
             _AuctionInfo = new AuctionInfo();
-            _Stats = null;
             _LastUpdated = DateTime.Now;
             _Location = TradeItemLocation.Unknown;
             _IsLocked = false;
@@ -43,7 +41,6 @@ namespace FIFAUltimateTeamBot
         public PlayerItem(AuctionInfo auctionInfo)
         {
             _AuctionInfo = auctionInfo;
-            _Stats = new StatPackage(_AuctionInfo.ItemData.Id);
             _LastUpdated = DateTime.Now;
             _Location = TradeItemLocation.Unknown;
             _IsLocked = false;
@@ -92,10 +89,18 @@ namespace FIFAUltimateTeamBot
             //Special prices.
             switch (_AuctionInfo.ItemData.ResourceId)
             {
+                //Normal Bale.
+                case 1342351011: { _AuctionInfo.StartingBid = 75000; _AuctionInfo.BuyNowPrice = 90000; break; }
                 //Normal Reus.
                 case 1342365630: { _AuctionInfo.StartingBid = 5300; _AuctionInfo.BuyNowPrice = 5900; break; }
                 //Normal Muller.
                 case 1342366876: { _AuctionInfo.StartingBid = 1900; _AuctionInfo.BuyNowPrice = 2500; break; }
+                //Normal Gomez.
+                case 1342327698: { _AuctionInfo.StartingBid = 3200; _AuctionInfo.BuyNowPrice = 3900; break; }
+                //Normal Podolski.
+                case 1342327796: { _AuctionInfo.StartingBid = 2600; _AuctionInfo.BuyNowPrice = 3200; break; }
+                //Normal Kroos.
+                case 1342359801: { _AuctionInfo.StartingBid = 2500; _AuctionInfo.BuyNowPrice = 3100; break; }
             }
         }
         #endregion
@@ -115,14 +120,6 @@ namespace FIFAUltimateTeamBot
         {
             get { return _AuctionInfo; }
             set { _AuctionInfo = value; _LastUpdated = DateTime.Now; _Update = false; }
-        }
-        /// <summary>
-        /// The auction stats of this player item.
-        /// </summary>
-        public StatPackage Stats
-        {
-            get { return _Stats; }
-            set { _Stats = value; }
         }
         /// <summary>
         /// The time this player item was last updated.

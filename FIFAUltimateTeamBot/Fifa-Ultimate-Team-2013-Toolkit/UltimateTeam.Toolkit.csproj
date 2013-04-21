@@ -41,8 +41,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Constant\HttpMethod.cs" />
+    <Compile Include="Constant\NonStandardHttpHeaders.cs" />
+    <Compile Include="Constant\Resources.cs" />
     <Compile Include="Extension\AuctionInfoExtensions.cs" />
     <Compile Include="Model\CardType.cs" />
+    <Compile Include="Model\CredistResponse.cs" />
     <Compile Include="Model\ErrorResponse.cs" />
     <Compile Include="Model\RequestException.cs" />
     <Compile Include="Model\ResponseBase.cs" />
@@ -52,6 +56,7 @@
     <Compile Include="Model\Item.cs" />
     <Compile Include="Model\ItemWrapper.cs" />
     <Compile Include="Model\RareType.cs" />
+    <Compile Include="Model\UnopenedPacks.cs" />
     <Compile Include="Parameter\Formation.cs" />
     <Compile Include="Parameter\PlayerSearchParameters.cs" />
     <Compile Include="Model\ResourceType.cs" />
@@ -62,7 +67,8 @@
     <Compile Include="Parameter\Position.cs" />
     <Compile Include="Parameter\Team.cs" />
     <Compile Include="Request\BidRequest.cs" />
-    <Compile Include="Request\SellRequest.cs" />
+    <Compile Include="Request\CreditsRequest.cs" />
+    <Compile Include="Request\ListAuctionRequest.cs" />
     <Compile Include="Request\ItemRequest.cs" />
     <Compile Include="Request\PlayerImageRequest.cs" />
     <Compile Include="Request\TradeRequest.cs" />

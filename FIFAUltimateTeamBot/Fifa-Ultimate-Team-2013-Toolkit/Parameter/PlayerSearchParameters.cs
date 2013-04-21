@@ -24,19 +24,15 @@ namespace UltimateTeam.Toolkit.Parameter
 
         internal override string BuildUriString(ref string uriString)
         {
-            if (League > 0)
-                uriString += "&leag=" + League;
+            if (League > 0) { uriString += "&leag=" + League; }
 
             SetLevel(ref uriString);
 
-            if (Nation > 0)
-                uriString += "&nat=" + Nation;
+            if (Nation > 0) { uriString += "&nat=" + Nation; }
 
-            if (!string.IsNullOrEmpty(Formation))
-                uriString += "&form=" + Formation;
+            if (!string.IsNullOrEmpty(Formation)) { uriString += "&form=" + Formation; }
 
-            if (Team > 0)
-                uriString += "&team=" + Team;
+            if (Team > 0) { uriString += "&team=" + Team; }
 
             SetPosition(ref uriString);
 
@@ -64,13 +60,10 @@ namespace UltimateTeam.Toolkit.Parameter
         private void SetPosition(ref string uriString)
         {
             if (!string.IsNullOrEmpty(Position))
-                uriString += (
-                                 Position == Parameter.Position.Defenders ||
-                                 Position == Parameter.Position.Midfielders ||
-                                 Position == Parameter.Position.Attackers
-                                     ? "&zone="
-                                     : "&pos=")
-                             + Position;
+            {
+                uriString += (Position == Parameter.Position.Defenders || Position == Parameter.Position.Midfielders ||
+                    Position == Parameter.Position.Attackers ? "&zone=" : "&pos=") + Position;
+            }
         }
     }
 }

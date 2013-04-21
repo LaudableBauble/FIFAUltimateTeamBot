@@ -18,6 +18,7 @@ namespace FIFAUltimateTeamBot
     {
         #region Fields
         private static bool _IsActive;
+        private static DateTime _SavedStatsLast;
         #endregion
 
         #region Methods
@@ -30,8 +31,14 @@ namespace FIFAUltimateTeamBot
             //Stop here if the logic manager is not active.
             if (!_IsActive) { return; }
 
+            //Load all statistics and resource data.
+            DataManager.LoadStats().ForEach(item => DataManager.AddOrUpdate(item));
+            DataManager.LoadResourceData().ToList().ForEach(item => DataManager.AddOrUpdate(item.Value, item.Key));
+            _SavedStatsLast = DateTime.Now;
+
             //Login and load all items. It is important that the first request is to login.
             RequestManager.Login();
+            RequestManager.LoadCredits();
             RequestManager.LoadTradePile();
             RequestManager.LoadWatchList();
             RequestManager.LoadUnassignedItems();
@@ -58,10 +65,13 @@ namespace FIFAUltimateTeamBot
                     var toRemove = isExpired.Where(item => item.AuctionInfo.CurrentPrice != 0);
                     RequestManager.RemoveItemsFromTradePile(toRemove.ToList());
 
+                    //If an item has been sold, update the credits.
+                    if (toRemove.Count() > 0) { RequestManager.LoadCredits(); }
+
                     //Relist all expired items that did not get sold. (Make sure that new items are sold for an appropriate sum).
                     var toRelist = isExpired.Where(item => item.AuctionInfo.CurrentPrice == 0);
                     foreach (PlayerItem item in toRelist.Where(item => item.AuctionInfo.StartingBid <= 150)) { item.PrepareForAuction(); }
-                    RequestManager.SellItems(toRelist.ToList());
+                    RequestManager.AuctionItems(toRelist.ToList());
                 }
 
                 //If there is less than 40 items up for sale in the trade pile, try to add some from the watchlist or unassigned items.
@@ -70,6 +80,14 @@ namespace FIFAUltimateTeamBot
                     //Get the watch list and choose which of them to move to the trade pile.
                     var watchList = DataManager.Where(item => item.Location != TradeItemLocation.TradePile && item.IsAllowedToBeSold && !item.IsLocked);
                     RequestManager.MoveItems(watchList.Take(40 - DataManager.Count(item => item.Location == TradeItemLocation.TradePile)).ToList());
+                }
+
+                //If it's time to save the stats and resource data, do so.
+                if (DateTime.Now.Subtract(_SavedStatsLast).TotalSeconds > 60)
+                {
+                    DataManager.SaveStats();
+                    DataManager.SaveResourceData();
+                    _SavedStatsLast = DateTime.Now;
                 }
 
                 //Handle all stockpiled requests.
@@ -95,12 +113,12 @@ namespace FIFAUltimateTeamBot
             {
                 /* Update every:
                  * - 2 minutes when over two minutes left.
-                 * - 5 seconds when less 30 seconds left.
-                 * - 2 seconds when less than 15 seconds left.
+                 * - 5 seconds when less than 120 seconds left.
+                 * - 5 seconds when less than 15 seconds left.
                  */
                 if (remainingTime > 120 && sinceLastUpdate.TotalSeconds > 120) { return true; }
                 if (remainingTime > 15 && remainingTime < 120 && sinceLastUpdate.TotalSeconds > 5) { return true; }
-                if (remainingTime < 15 && sinceLastUpdate.TotalSeconds > 2) { return true; }
+                if (remainingTime < 15 && sinceLastUpdate.TotalSeconds > 5) { return true; }
             }
 
             //Default behaviour.

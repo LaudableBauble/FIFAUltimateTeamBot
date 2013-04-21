@@ -19,15 +19,17 @@ namespace FIFAUltimateTeamBot
         private static LinkedList<Func<Task>> _RequestQueue;
 
         public delegate void TradeItemsEventHandler(List<PlayerItem> tradeItems);
+        public delegate void CreditsEventHandler(CreditsResponse credits);
         public static event TradeItemsEventHandler OnLoadTradePile;
         public static event TradeItemsEventHandler OnLoadWatchList;
         public static event TradeItemsEventHandler OnLoadUnassigned;
         public static event TradeItemsEventHandler OnLoadClub;
         public static event TradeItemsEventHandler OnUpdateItems;
         public static event TradeItemsEventHandler OnMoveItems;
-        public static event TradeItemsEventHandler OnSellItems;
+        public static event TradeItemsEventHandler OnAuctionItems;
         public static event TradeItemsEventHandler OnSearchItems;
         public static event TradeItemsEventHandler OnRemoveItems;
+        public static event CreditsEventHandler OnLoadCredits;
         #endregion
 
         #region Methods
@@ -164,9 +166,9 @@ namespace FIFAUltimateTeamBot
             _RequestQueue.AddLast(() => MoveItemsAsync(tradeItems));
         }
         /// <summary>
-        /// Sell all specified trade items.
+        /// Auction all specified trade items.
         /// </summary>
-        public static void SellItems(List<PlayerItem> tradeItems)
+        public static void AuctionItems(List<PlayerItem> tradeItems)
         {
             //Validation check.
             if (tradeItems == null) { throw new ArgumentNullException("The list of trade items cannot be null!"); }
@@ -175,8 +177,8 @@ namespace FIFAUltimateTeamBot
             //Lock the items.
             tradeItems.ForEach(item => item.IsLocked = true);
 
-            //Add the sell items request to the request queue.
-            _RequestQueue.AddLast(() => SellItemsAsync(tradeItems));
+            //Add the auction items request to the request queue.
+            _RequestQueue.AddLast(() => AuctionItemsAsync(tradeItems));
         }
         /// <summary>
         /// Search for some items.
@@ -190,6 +192,13 @@ namespace FIFAUltimateTeamBot
 
             //Add the search request to the request queue.
             _RequestQueue.AddLast(() => SearchItemsAsync(searchParameters));
+        }
+        /// <summary>
+        /// Get amount of credits and unopened packs.
+        /// </summary>
+        public static void LoadCredits()
+        {
+            _RequestQueue.AddLast(() => LoadCreditsAsync());
         }
 
         /// <summary>
@@ -407,24 +416,24 @@ namespace FIFAUltimateTeamBot
             MoveItemsEventInvoke(tradeItems.ToList());
         }
         /// <summary>
-        /// Sell the specified trade items.
+        /// Auction the specified trade items.
         /// </summary>
-        /// <param name="auctions">The trade items to sell.</param>
-        private async static Task SellItemsAsync(IEnumerable<PlayerItem> auctions)
+        /// <param name="auctions">The trade items to auction.</param>
+        private async static Task AuctionItemsAsync(IEnumerable<PlayerItem> auctions)
         {
             //Validation check.
             if (!_IsLoggedIn) { throw new ArgumentException("You have not logged in yet!"); }
             if (auctions.Any(item => !item.IsAllowedToBeSold)) { throw new ArgumentException("One of the items are not allowed to be sold!"); }
 
-            //For each given auction, try to sell it.
+            //For each given auction, try to auction it.
             foreach (PlayerItem auction in auctions)
             {
-                var response = await new SellRequest().SellItem(auction.AuctionInfo);
+                var response = await new ListAuctionRequest().AuctionItem(auction.AuctionInfo);
                 auction.AuctionInfo.TradeId = response.TradeId;
             }
 
             //Notify all interested parties.
-            SellItemsEventInvoke(auctions.ToList());
+            AuctionItemsEventInvoke(auctions.ToList());
         }
         /// <summary>
         /// Search for players on the global auction.
@@ -459,6 +468,24 @@ namespace FIFAUltimateTeamBot
 
             //Notify all interested parties.
             SearchItemsEventInvoke(DataManager.Where(item => auctions.Any(auction => auction == item.AuctionInfo)).ToList());
+        }
+        /// <summary>
+        /// Get amount of credits and unopened packs.
+        /// </summary>
+        private async static Task LoadCreditsAsync()
+        {
+            try
+            {
+                //Validation check.
+                if (!_IsLoggedIn) { throw new ArgumentException("You are not logged in yet!"); }
+
+                //Notify all interested parties.
+                LoadCreditsEventInvoke(await new CreditsRequest().GetCreditsAsync());
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show("Credits Request\n\nException: " + e.InnerException.ToString() + "\nMessage: " + e.Message + "\n\nStack Trace:\n" + e.StackTrace);
+            }
         }
 
         /// <summary>
@@ -524,12 +551,12 @@ namespace FIFAUltimateTeamBot
         /// <summary>
         /// Some trade items have been auctioned. Let the world know.
         /// </summary>
-        private static void SellItemsEventInvoke(List<PlayerItem> tradeItems)
+        private static void AuctionItemsEventInvoke(List<PlayerItem> tradeItems)
         {
             //Unlock the items and force them to update.
             tradeItems.ForEach(item => { item.Update = true; item.IsLocked = false; });
 
-            if (OnSellItems != null) { OnSellItems(tradeItems); }
+            if (OnAuctionItems != null) { OnAuctionItems(tradeItems); }
         }
         /// <summary>
         /// A search for players has been done. Let the world know.
@@ -547,6 +574,13 @@ namespace FIFAUltimateTeamBot
             tradeItems.ForEach(item => { item.Update = true; item.IsLocked = false; });
 
             if (OnRemoveItems != null) { OnRemoveItems(tradeItems); }
+        }
+        /// <summary>
+        /// The amount of credits and unopened packs have been loaded. Let the world know.
+        /// </summary>
+        private static void LoadCreditsEventInvoke(CreditsResponse credits)
+        {
+            if (OnLoadCredits != null) { OnLoadCredits(credits); }
         }
         #endregion
 
