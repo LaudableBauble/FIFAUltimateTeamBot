@@ -291,6 +291,24 @@ namespace FIFAUltimateTeamBot
             }
             catch (IOException) { }
         }
+        /// <summary>
+        /// Filter a sequence of players.
+        /// </summary>
+        /// <param name="players">The players to filter.</param>
+        /// <param name="filter">The filter to use.</param>
+        /// <returns>The filtered set of players.</returns>
+        public static List<PlayerItem> Filter(List<PlayerItem> players, FilterParameters filter)
+        {
+            //Filter the set of players.
+            var filtered = players.Where(x => x.AuctionInfo.ItemData.Rating >= filter.MinRating);
+            filtered = players.Where(x => x.AuctionInfo.ItemData.Rating <= (filter.MaxRating <= 0 ? 100 : filter.MaxRating));
+            filtered = players.Where(x => x.AuctionInfo.StartingBid >= filter.MinBidPrice);
+            if (filter.MaxBidPrice > 0) { filtered = players.Where(x => x.AuctionInfo.StartingBid <= filter.MaxBidPrice); }
+            filtered = players.Where(x => x.AuctionInfo.BuyNowPrice >= filter.MinBuyNowPrice);
+            if (filter.MaxBuyNowPrice > 0) { filtered = players.Where(x => x.AuctionInfo.BuyNowPrice <= filter.MaxBuyNowPrice); }
+
+            return filtered.ToList();
+        }
         #endregion
 
         #region Properties

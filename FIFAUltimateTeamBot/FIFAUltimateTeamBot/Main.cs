@@ -359,7 +359,7 @@ namespace FIFAUltimateTeamBot
                 var first = stats.Where(x => x.Sold.Year > 1).OrderBy(x => x.Sold).ToList();
                 var days = first != null ? (int)Math.Ceiling(DateTime.Now.Subtract(first[0].Sold).TotalDays) : 1;
                 lblInfoStats.Text = "A total of " + sold + " players have been sold for a collective sum of " +
-                    soldFor + " coins (" + (soldFor / days) + " coins/day)." + "\n\nTop five sold players:";
+                    soldFor + " coins (" + (soldFor / days) + " coins/day)." + "\n\nTop ten sold players:";
 
                 //The toplist.
                 var toplist = new Dictionary<long, int>();
@@ -371,7 +371,7 @@ namespace FIFAUltimateTeamBot
                 int count = 0;
                 foreach (var i in toplist.ToList().OrderBy(x => x.Value).Reverse())
                 {
-                    if (count >= 5) { break; }
+                    if (count >= 10) { break; }
 
                     var name = DataManager.ResourceDataExists(i.Key) ? DataManager.ResourceData[i.Key].FirstName + " " +
                         DataManager.ResourceData[i.Key].LastName : "invalid";

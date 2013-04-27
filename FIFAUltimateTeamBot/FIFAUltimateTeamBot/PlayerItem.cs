@@ -73,20 +73,6 @@ namespace FIFAUltimateTeamBot
             _AuctionInfo.BidState = "highest";
 
             //Decide the price.
-            if (_AuctionInfo.ItemData.Rating >= 84) { _AuctionInfo.StartingBid = 1400; _AuctionInfo.BuyNowPrice = 1900; }
-            else if (_AuctionInfo.ItemData.Rating == 83) { _AuctionInfo.StartingBid = 1200; _AuctionInfo.BuyNowPrice = 1700; }
-            else if (_AuctionInfo.ItemData.Rating == 82) { _AuctionInfo.StartingBid = 1000; _AuctionInfo.BuyNowPrice = 1500; }
-            if (_AuctionInfo.ItemData.Rating <= 81) { _AuctionInfo.StartingBid = 900; _AuctionInfo.BuyNowPrice = 1300; }
-
-            if (DataManager.ResourceDataExists(_AuctionInfo.ItemData.Id))
-            {
-                if (DataManager.ResourceData[_AuctionInfo.ItemData.Id].LastName.Equals("Sturridge"))
-                {
-                    _AuctionInfo.StartingBid = 3300; _AuctionInfo.BuyNowPrice = 3800;
-                }
-            }
-
-            //Special prices.
             switch (_AuctionInfo.ItemData.ResourceId)
             {
                 //Normal Bale.
@@ -101,6 +87,24 @@ namespace FIFAUltimateTeamBot
                 case 1342327796: { _AuctionInfo.StartingBid = 2600; _AuctionInfo.BuyNowPrice = 3200; break; }
                 //Normal Kroos.
                 case 1342359801: { _AuctionInfo.StartingBid = 2500; _AuctionInfo.BuyNowPrice = 3100; break; }
+                default:
+                    {
+                        //Non-special players get their pricing based upon their rating.
+                        if (_AuctionInfo.ItemData.Rating >= 84) { _AuctionInfo.StartingBid = 1400; _AuctionInfo.BuyNowPrice = 1900; }
+                        else if (_AuctionInfo.ItemData.Rating == 83) { _AuctionInfo.StartingBid = 1200; _AuctionInfo.BuyNowPrice = 1700; }
+                        else if (_AuctionInfo.ItemData.Rating == 82) { _AuctionInfo.StartingBid = 1000; _AuctionInfo.BuyNowPrice = 1500; }
+                        else if (_AuctionInfo.ItemData.Rating <= 81) { _AuctionInfo.StartingBid = 900; _AuctionInfo.BuyNowPrice = 1300; }
+
+                        if (DataManager.ResourceDataExists(_AuctionInfo.ItemData.Id))
+                        {
+                            if (DataManager.ResourceData[_AuctionInfo.ItemData.Id].LastName.Equals("Sturridge"))
+                            {
+                                _AuctionInfo.StartingBid = 3300; _AuctionInfo.BuyNowPrice = 3800;
+                            }
+                        }
+
+                        break;
+                    }
             }
         }
         #endregion

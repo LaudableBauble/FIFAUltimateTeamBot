@@ -57,17 +57,20 @@ namespace FIFAUltimateTeamBot
                     await _RequestQueue.First()();
                     _RequestQueue.RemoveFirst();
                 }
-                catch (RequestException e)
+                catch (Exception e)
                 {
-                    //Depending on the error, do different things.
-                    switch (e.Error.Reason)
+                    if (e.GetType() == typeof(RequestException))
                     {
-                        default:
-                            {
-                                //An exception occurred, try to fix it by login in again.
-                                _RequestQueue.AddFirst(() => LoginAsync());
-                                break;
-                            }
+                        //Depending on the error, do different things.
+                        switch ((e as RequestException).Error.Reason)
+                        {
+                            default:
+                                {
+                                    //An exception occurred, try to fix it by login in again.
+                                    _RequestQueue.AddFirst(() => LoginAsync());
+                                    break;
+                                }
+                        }
                     }
                 }
             }
