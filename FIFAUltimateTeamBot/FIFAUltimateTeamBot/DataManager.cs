@@ -23,7 +23,7 @@ namespace FIFAUltimateTeamBot
         #region Fields
         private static LoginCredentials _LoginCredentials;
         private static ConcurrentDictionary<long, PlayerItem> _Items;
-        private static ConcurrentDictionary<long, Item> _ResourceData;
+        private static ConcurrentDictionary<long, ResourceItem> _ResourceData;
         private static ConcurrentDictionary<long, StatPackage> _Statistics;
         #endregion
 
@@ -41,10 +41,15 @@ namespace FIFAUltimateTeamBot
         /// <param name="loginCredentials">The login credentials to use.</param>
         public static void Initialize(LoginCredentials loginCredentials)
         {
+            //Initialize the variables.
             _LoginCredentials = loginCredentials;
             _Items = new ConcurrentDictionary<long, PlayerItem>();
-            _ResourceData = new ConcurrentDictionary<long, Item>();
+            _ResourceData = new ConcurrentDictionary<long, ResourceItem>();
             _Statistics = new ConcurrentDictionary<long, StatPackage>();
+
+            //Load all statistics and resource data.
+            LoadStats().ForEach(item => DataManager.AddOrUpdate(item));
+            LoadResourceData();
         }
 
         /// <summary>
@@ -123,9 +128,18 @@ namespace FIFAUltimateTeamBot
             //Look for the resource data.
             var data = ResourceDataExists(resourceId) ? _ResourceData[resourceId] : null;
 
-            //If the data already exists, just update it. Otherwise add it to the dictionary.
-            if (data != null) { data = resourceData; }
-            else { _ResourceData.AddOrUpdate(resourceId, resourceData, (key, oldValue) => resourceData); }
+            //If the data already exists, just update it. Otherwise we create a new resource item from scratch.
+            if (data != null) { data.ResourceData = resourceData; }
+            else
+            {
+                //Create the resource item and add the data to it.
+                data = new ResourceItem();
+                data.ResourceId = resourceId;
+                data.ResourceData = resourceData;
+
+                //Add the item to the list.
+                _ResourceData.TryAdd(data.ResourceId, data);
+            }
         }
 
         /// <summary>
@@ -210,7 +224,7 @@ namespace FIFAUltimateTeamBot
         /// <returns>Whether the resource data exists or not.</returns>
         public static bool ResourceDataExists(long resourceId)
         {
-            Item item;
+            ResourceItem item;
             return _ResourceData.TryGetValue(resourceId, out item);
         }
         /// <summary>
@@ -258,17 +272,17 @@ namespace FIFAUltimateTeamBot
                 }*/
                 new XmlSerializer(typeof(List<StatPackage>)).Serialize(new XmlTextWriter(@"Data\stats.xml", null), _Statistics.Values.ToList());
             }
-            catch (IOException e)
-            {
-
-            }
+            catch (IOException e) { }
         }
         /// <summary>
         /// Load the resource data of all items.
         /// </summary>
-        public static List<KeyValuePair<long, Item>> LoadResourceData()
+        public static void LoadResourceData()
         {
-            return (List<KeyValuePair<long, Item>>)new XmlSerializer(typeof(List<KeyValuePair<long, Item>>)).Deserialize(new XmlTextReader(@"Data\resourceData.xml"));
+            //Load the resource data and add it to the dictionary.
+            var data = (List<ResourceItem>)new XmlSerializer(typeof(List<ResourceItem>)).Deserialize(new XmlTextReader(@"Data\resource_data.xml"));
+            _ResourceData.Clear();
+            data.ForEach(x => _ResourceData.AddOrUpdate(x.ResourceId, x, (key, oldValue) => x));
         }
         /// <summary>
         /// Save the resource data to disk.
@@ -285,9 +299,9 @@ namespace FIFAUltimateTeamBot
                     if (data != null) { data = item; }
                     else { resourceData.Add(item); }
                 }*/
-                var resources = new List<KeyValuePair<long, Item>>();
-                _ResourceData.ToList().ForEach(x => resources.Add(new KeyValuePair<long, Item>() { Key = x.Key, Value = x.Value }));
-                new XmlSerializer(typeof(List<KeyValuePair<long, Item>>)).Serialize(new XmlTextWriter(@"Data\resourceData.xml", null), resources);
+                var resources = new List<ResourceItem>();
+                _ResourceData.ToList().ForEach(x => resources.Add(x.Value));
+                new XmlSerializer(typeof(List<ResourceItem>)).Serialize(new XmlTextWriter(@"Data\resource_data.xml", null), resources);
             }
             catch (IOException) { }
         }
@@ -331,9 +345,9 @@ namespace FIFAUltimateTeamBot
         /// <summary>
         /// The resource data. The key is the resource id.
         /// </summary>
-        public static ConcurrentDictionary<long, Item> ResourceData
+        public static ConcurrentDictionary<long, ResourceItem> ResourceData
         {
-            get { return new ConcurrentDictionary<long, Item>(_ResourceData); }
+            get { return new ConcurrentDictionary<long, ResourceItem>(_ResourceData); }
         }
         /// <summary>
         /// The statistics. The key is the item id.

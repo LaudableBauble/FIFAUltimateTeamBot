@@ -15,5 +15,6 @@ namespace FIFAUltimateTeamBot
         public int TimesAuctioned { get; set; }
         public DateTime Sold { get; set; }
         public int SoldFor { get; set; }
+        public bool IsAllowedToBeAuctioned { get; set; }
     }
 }

@@ -31,9 +31,7 @@ namespace FIFAUltimateTeamBot
             //Stop here if the logic manager is not active.
             if (!_IsActive) { return; }
 
-            //Load all statistics and resource data.
-            DataManager.LoadStats().ForEach(item => DataManager.AddOrUpdate(item));
-            DataManager.LoadResourceData().ToList().ForEach(item => DataManager.AddOrUpdate(item.Value, item.Key));
+            //The time elapsed since the stats were last saved.
             _SavedStatsLast = DateTime.Now;
 
             //Login and load all items. It is important that the first request is to login.
@@ -71,14 +69,14 @@ namespace FIFAUltimateTeamBot
                     //Relist all expired items that did not get sold. (Make sure that new items are sold for an appropriate sum).
                     var toRelist = isExpired.Where(item => item.AuctionInfo.CurrentPrice == 0);
                     foreach (PlayerItem item in toRelist.Where(item => item.AuctionInfo.StartingBid <= 150)) { item.PrepareForAuction(); }
-                    RequestManager.AuctionItems(toRelist.ToList());
+                    RequestManager.AuctionItems(toRelist.Where(item => item.IsAllowedToBeAuctioned).ToList());
                 }
 
                 //If there is less than 40 items up for sale in the trade pile, try to add some from the watchlist or unassigned items.
                 if (DataManager.Count(item => item.Location == TradeItemLocation.TradePile) < 40)
                 {
                     //Get the watch list and choose which of them to move to the trade pile.
-                    var watchList = DataManager.Where(item => item.Location != TradeItemLocation.TradePile && item.IsAllowedToBeSold && !item.IsLocked);
+                    var watchList = DataManager.Where(item => item.Location != TradeItemLocation.TradePile && item.IsAllowedToBeAuctioned && !item.IsLocked);
                     RequestManager.MoveItems(watchList.Take(40 - DataManager.Count(item => item.Location == TradeItemLocation.TradePile)).ToList());
                 }
 

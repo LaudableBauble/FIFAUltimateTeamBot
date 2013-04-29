@@ -234,28 +234,32 @@ namespace FIFAUltimateTeamBot
         /// <returns></returns>
         private async static Task LoadItemsAsync(List<PlayerItem> tradeItems)
         {
-            //Validation check.
-            if (!_IsLoggedIn) { throw new ArgumentException("You are not logged in yet!"); }
-            if (tradeItems == null) { throw new ArgumentNullException("The list of trade items cannot be null!"); }
-            if (tradeItems.Count() == 0) { return; }
-
-            //Get the refreshed auction info and item data and update all the trade items.
-            var tradeIds = tradeItems.FindAll(xItem => xItem.AuctionInfo.TradeId != 0).Select(yItem => yItem.AuctionInfo.TradeId);
-            if (tradeIds.Count() == 0) { return; }
-            var response = await new TradeRequest().GetTradeStatuses(tradeIds);
-
-            response.AuctionInfo.ForEach(async auction =>
+            try
             {
-                DataManager.AddOrUpdate(auction);
-                //If the item's resource data has not been loaded yet, do so.
-                if (!DataManager.ResourceDataExists(auction.ItemData.ResourceId))
-                {
-                    DataManager.AddOrUpdate(await new ItemRequest().GetItemAsync(auction.ItemData.ResourceId), auction.ItemData.ResourceId);
-                }
-            });
+                //Validation check.
+                if (!_IsLoggedIn) { throw new ArgumentException("You are not logged in yet!"); }
+                if (tradeItems == null) { throw new ArgumentNullException("The list of trade items cannot be null!"); }
+                if (tradeItems.Count() == 0) { return; }
 
-            //Notify all interested parties.
-            UpdateItemsEventInvoke(tradeItems);
+                //Get the refreshed auction info and item data and update all the trade items.
+                var tradeIds = tradeItems.FindAll(xItem => xItem.AuctionInfo.TradeId != 0).Select(yItem => yItem.AuctionInfo.TradeId);
+                if (tradeIds.Count() == 0) { return; }
+                var response = await new TradeRequest().GetTradeStatuses(tradeIds);
+
+                response.AuctionInfo.ForEach(async auction =>
+                {
+                    DataManager.AddOrUpdate(auction);
+                    //If the item's resource data has not been loaded yet, do so.
+                    if (!DataManager.ResourceDataExists(auction.ItemData.ResourceId))
+                    {
+                        DataManager.AddOrUpdate(await new ItemRequest().GetItemAsync(auction.ItemData.ResourceId), auction.ItemData.ResourceId);
+                    }
+                });
+
+                //Notify all interested parties.
+                UpdateItemsEventInvoke(tradeItems);
+            }
+            catch (Exception e) { }
         }
         /// <summary>
         /// Load all auction items in the trade pile.
@@ -287,7 +291,7 @@ namespace FIFAUltimateTeamBot
                     }
 
                     item.Location = TradeItemLocation.TradePile;
-                    item.IsAllowedToBeSold = true;
+                    item.IsAllowedToBeAuctioned = true;
                 }
 
                 //Notify all interested parties.
@@ -426,11 +430,17 @@ namespace FIFAUltimateTeamBot
         {
             //Validation check.
             if (!_IsLoggedIn) { throw new ArgumentException("You have not logged in yet!"); }
-            if (auctions.Any(item => !item.IsAllowedToBeSold)) { throw new ArgumentException("One of the items are not allowed to be sold!"); }
 
             //For each given auction, try to auction it.
             foreach (PlayerItem auction in auctions)
             {
+                //Prepare the player for auction.
+                auction.PrepareForAuction();
+
+                //If the player is not allowed to be auctioned, stop here.
+                if (!auction.IsAllowedToBeAuctioned) { continue; }
+
+                //Make the request.
                 var response = await new ListAuctionRequest().AuctionItem(auction.AuctionInfo);
                 auction.AuctionInfo.TradeId = response.TradeId;
             }

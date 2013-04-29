@@ -17,7 +17,7 @@ namespace FIFAUltimateTeamBot
         private bool _IsLocked;
         private bool _Update;
         private bool _Remove;
-        private bool _IsAllowedToBeSold;
+        private bool _IsAllowedToBeAuctioned;
         #endregion
 
         #region Constructors
@@ -32,7 +32,7 @@ namespace FIFAUltimateTeamBot
             _IsLocked = false;
             _Update = false;
             _Remove = false;
-            _IsAllowedToBeSold = false;
+            _IsAllowedToBeAuctioned = false;
         }
         /// <summary>
         /// Create a player item.
@@ -46,7 +46,7 @@ namespace FIFAUltimateTeamBot
             _IsLocked = false;
             _Update = false;
             _Remove = false;
-            _IsAllowedToBeSold = false;
+            _IsAllowedToBeAuctioned = false;
         }
         #endregion
 
@@ -73,47 +73,22 @@ namespace FIFAUltimateTeamBot
             _AuctionInfo.BidState = "highest";
 
             //Decide the price.
-            switch (_AuctionInfo.ItemData.ResourceId)
+            var resource = ResourceItem;
+            if (resource != null && resource.DefaultBidPrice > 0)
             {
-                //Normal Bale.
-                case 1342351011: { _AuctionInfo.StartingBid = 75000; _AuctionInfo.BuyNowPrice = 90000; break; }
-                //Normal Reus.
-                case 1342365630: { _AuctionInfo.StartingBid = 5300; _AuctionInfo.BuyNowPrice = 5900; break; }
-                //Normal Muller.
-                case 1342366876: { _AuctionInfo.StartingBid = 1900; _AuctionInfo.BuyNowPrice = 2500; break; }
-                //Normal Gomez.
-                case 1342327698: { _AuctionInfo.StartingBid = 3200; _AuctionInfo.BuyNowPrice = 3900; break; }
-                //Normal Podolski.
-                case 1342327796: { _AuctionInfo.StartingBid = 2600; _AuctionInfo.BuyNowPrice = 3200; break; }
-                //Normal Kroos.
-                case 1342359801: { _AuctionInfo.StartingBid = 2500; _AuctionInfo.BuyNowPrice = 3100; break; }
-                default:
-                    {
-                        //Non-special players get their pricing based upon their rating.
-                        if (_AuctionInfo.ItemData.Rating >= 84) { _AuctionInfo.StartingBid = 1400; _AuctionInfo.BuyNowPrice = 1900; }
-                        else if (_AuctionInfo.ItemData.Rating == 83) { _AuctionInfo.StartingBid = 1200; _AuctionInfo.BuyNowPrice = 1700; }
-                        else if (_AuctionInfo.ItemData.Rating == 82) { _AuctionInfo.StartingBid = 1000; _AuctionInfo.BuyNowPrice = 1500; }
-                        else if (_AuctionInfo.ItemData.Rating <= 81) { _AuctionInfo.StartingBid = 900; _AuctionInfo.BuyNowPrice = 1300; }
-
-                        if (DataManager.ResourceDataExists(_AuctionInfo.ItemData.Id))
-                        {
-                            if (DataManager.ResourceData[_AuctionInfo.ItemData.Id].LastName.Equals("Sturridge"))
-                            {
-                                _AuctionInfo.StartingBid = 3300; _AuctionInfo.BuyNowPrice = 3800;
-                            }
-                        }
-
-                        break;
-                    }
+                _IsAllowedToBeAuctioned = resource.IsAllowedToBeAuctioned;
+                _AuctionInfo.StartingBid = (uint)resource.DefaultBidPrice;
+                _AuctionInfo.BuyNowPrice = (uint)resource.DefaultBuyNowPrice;
             }
+            else { _IsAllowedToBeAuctioned = false; }
         }
         #endregion
 
         #region Properties
         /// <summary>
-        /// The player item's resource data. This is data that does not change.
+        /// The player item's resource item. This is data that does not change.
         /// </summary>
-        public Item ResourceData
+        public ResourceItem ResourceItem
         {
             get { return DataManager.ResourceDataExists(_AuctionInfo.ItemData.ResourceId) ? DataManager.ResourceData[_AuctionInfo.ItemData.ResourceId] : null; }
         }
@@ -159,10 +134,18 @@ namespace FIFAUltimateTeamBot
         /// <summary>
         /// Whether the player item is allowed to be auctioned.
         /// </summary>
-        public bool IsAllowedToBeSold
+        public bool IsAllowedToBeAuctioned
         {
-            get { return _IsAllowedToBeSold; }
-            set { _IsAllowedToBeSold = value; }
+            get
+            {
+                return ResourceItem != null && ResourceItem.IsAllowedToBeAuctioned && _IsAllowedToBeAuctioned;
+            }
+            set
+            {
+                var resource = ResourceItem;
+                if (resource != null && resource.IsAllowedToBeAuctioned) { _IsAllowedToBeAuctioned = value; }
+                else { _IsAllowedToBeAuctioned = false; }
+            }
         }
         /// <summary>
         /// The location of the player item.

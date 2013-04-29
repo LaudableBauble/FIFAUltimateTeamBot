@@ -23,6 +23,8 @@ namespace FIFAUltimateTeamBot
     public partial class Main : Form
     {
         PlayerItem _SelectedItem;
+        ResourceItem _SelectedResourceItem;
+        bool _IsUserChanging = true;
 
         public Main()
         {
@@ -38,8 +40,13 @@ namespace FIFAUltimateTeamBot
             ckbClub.CheckedChanged += OnCheckedChanged;
             ckbUnassigned.CheckedChanged += OnCheckedChanged;
             ckbAuctionItems.CheckedChanged += OnCheckedChanged;
-            ckbCanBeSold.CheckedChanged += OnItemAllowedToBeSoldChanged;
+            ckbIsAllowedToBeAuctioned.CheckedChanged += OnItemAllowedToBeAuctionedChanged;
+            ckbStatsIsAllowedToBeAuctioned.CheckedChanged += OnItemAllowedToBeAuctionedChanged;
             lstvItems.ItemSelectionChanged += OnItemSelectionChanged;
+            lstvStats.ItemSelectionChanged += OnItemSelectionChanged;
+            numStatsDefaultBidPrice.ValueChanged += OnResourceItemDefaultPriceChanged;
+            numStatsDefaultBuyNowPrice.ValueChanged += OnResourceItemDefaultPriceChanged;
+            btnStatsSuggest.Click += OnSuggestDefaultPriceClick;
             RequestManager.OnLoadTradePile += OnLoadTradePile;
             RequestManager.OnLoadWatchList += OnLoadWatchList;
             RequestManager.OnLoadUnassigned += OnLoadUnassigned;
@@ -52,9 +59,13 @@ namespace FIFAUltimateTeamBot
             RequestManager.OnLoadCredits += OnLoadCredits;
 
             //Initialize the GUI.
-            SetupList();
+            SetupLists();
             SetupAuctionSearch();
             UpdateInfoStats();
+            LoadItemStatsList();
+
+            //Display the name and version of the bot.
+            this.Text = "FIFA 13 Ultimate Team Bot (v0.1.0)";
         }
 
         /// <summary>
@@ -118,10 +129,14 @@ namespace FIFAUltimateTeamBot
             lstvAuctionItems.Columns.Add("Heading", -2, HorizontalAlignment.Left);
         }
         /// <summary>
-        /// Set up the list view.
+        /// Set up the list views.
         /// </summary>
-        public void SetupList()
+        public void SetupLists()
         {
+            //////////////////////////////
+            //////////// ITEMS ///////////
+            //////////////////////////////
+
             //Enable the correct settings.
             lstvItems.View = View.Details;
             lstvItems.LabelEdit = false;
@@ -147,6 +162,25 @@ namespace FIFAUltimateTeamBot
             lstvItems.Columns.Add("Dribbling", -2, HorizontalAlignment.Left);
             lstvItems.Columns.Add("Defending", -2, HorizontalAlignment.Left);
             lstvItems.Columns.Add("Heading", -2, HorizontalAlignment.Left);
+
+            //////////////////////////////
+            //////////// STATS ///////////
+            //////////////////////////////
+
+            //Enable the correct settings.
+            lstvStats.View = View.Details;
+            lstvStats.LabelEdit = false;
+            lstvStats.AllowColumnReorder = false;
+            lstvStats.GridLines = true;
+            lstvStats.FullRowSelect = true;
+
+            //Reset the list view.
+            lstvStats.Clear();
+
+            //Add the columns.
+            lstvStats.Columns.Add("First Name", -2, HorizontalAlignment.Left);
+            lstvStats.Columns.Add("Last Name", -2, HorizontalAlignment.Left);
+            lstvStats.Columns.Add("Rating", -2, HorizontalAlignment.Left);
         }
         /// <summary>
         /// Load a list of items.
@@ -170,23 +204,23 @@ namespace FIFAUltimateTeamBot
                 if (lstvItem == null)
                 {
                     //Add an item.
-                    lstvItem = new ListViewItem(item.ResourceData.FirstName, 0);
+                    lstvItem = new ListViewItem(item.ResourceItem.ResourceData.FirstName, 0);
                     lstvItem.Tag = item;
 
                     //The data.
-                    lstvItem.SubItems.Add(item.ResourceData.LastName);
-                    lstvItem.SubItems.Add(item.ResourceData.Rating.ToString());
+                    lstvItem.SubItems.Add(item.ResourceItem.ResourceData.LastName);
+                    lstvItem.SubItems.Add(item.ResourceItem.ResourceData.Rating.ToString());
                     lstvItem.SubItems.Add(item.AuctionInfo.ItemData.PreferredPosition);
-                    lstvItem.SubItems.Add(item.ResourceData.CardType.ToString());
+                    lstvItem.SubItems.Add(item.ResourceItem.ResourceData.CardType.ToString());
                     lstvItem.SubItems.Add(item.Location.ToString());
                     lstvItem.SubItems.Add(item.AuctionInfo.CurrentPrice.ToString());
                     lstvItem.SubItems.Add(item.AuctionInfo.Expires.ToString());
-                    lstvItem.SubItems.Add(item.ResourceData.Attribute1.ToString());
-                    lstvItem.SubItems.Add(item.ResourceData.Attribute2.ToString());
-                    lstvItem.SubItems.Add(item.ResourceData.Attribute3.ToString());
-                    lstvItem.SubItems.Add(item.ResourceData.Attribute4.ToString());
-                    lstvItem.SubItems.Add(item.ResourceData.Attribute5.ToString());
-                    lstvItem.SubItems.Add(item.ResourceData.Attribute6.ToString());
+                    lstvItem.SubItems.Add(item.ResourceItem.ResourceData.Attribute1.ToString());
+                    lstvItem.SubItems.Add(item.ResourceItem.ResourceData.Attribute2.ToString());
+                    lstvItem.SubItems.Add(item.ResourceItem.ResourceData.Attribute3.ToString());
+                    lstvItem.SubItems.Add(item.ResourceItem.ResourceData.Attribute4.ToString());
+                    lstvItem.SubItems.Add(item.ResourceItem.ResourceData.Attribute5.ToString());
+                    lstvItem.SubItems.Add(item.ResourceItem.ResourceData.Attribute6.ToString());
 
                     //Add the item row to the list view.
                     lstvItems.Items.Add(lstvItem);
@@ -232,22 +266,22 @@ namespace FIFAUltimateTeamBot
                 if (lstvItem == null)
                 {
                     //Add an item.
-                    lstvItem = new ListViewItem(item.ResourceData.FirstName, 0);
+                    lstvItem = new ListViewItem(item.ResourceItem.ResourceData.FirstName, 0);
                     lstvItem.Tag = item;
 
                     //The data.
-                    lstvItem.SubItems.Add(item.ResourceData.LastName);
-                    lstvItem.SubItems.Add(item.ResourceData.Rating.ToString());
+                    lstvItem.SubItems.Add(item.ResourceItem.ResourceData.LastName);
+                    lstvItem.SubItems.Add(item.ResourceItem.ResourceData.Rating.ToString());
                     lstvItem.SubItems.Add(item.AuctionInfo.ItemData.PreferredPosition);
-                    lstvItem.SubItems.Add(item.ResourceData.CardType.ToString());
+                    lstvItem.SubItems.Add(item.ResourceItem.ResourceData.CardType.ToString());
                     lstvItem.SubItems.Add(item.AuctionInfo.CurrentPrice.ToString());
                     lstvItem.SubItems.Add(item.AuctionInfo.Expires.ToString());
-                    lstvItem.SubItems.Add(item.ResourceData.Attribute1.ToString());
-                    lstvItem.SubItems.Add(item.ResourceData.Attribute2.ToString());
-                    lstvItem.SubItems.Add(item.ResourceData.Attribute3.ToString());
-                    lstvItem.SubItems.Add(item.ResourceData.Attribute4.ToString());
-                    lstvItem.SubItems.Add(item.ResourceData.Attribute5.ToString());
-                    lstvItem.SubItems.Add(item.ResourceData.Attribute6.ToString());
+                    lstvItem.SubItems.Add(item.ResourceItem.ResourceData.Attribute1.ToString());
+                    lstvItem.SubItems.Add(item.ResourceItem.ResourceData.Attribute2.ToString());
+                    lstvItem.SubItems.Add(item.ResourceItem.ResourceData.Attribute3.ToString());
+                    lstvItem.SubItems.Add(item.ResourceItem.ResourceData.Attribute4.ToString());
+                    lstvItem.SubItems.Add(item.ResourceItem.ResourceData.Attribute5.ToString());
+                    lstvItem.SubItems.Add(item.ResourceItem.ResourceData.Attribute6.ToString());
 
                     //Add the item row to the list view.
                     lstvAuctionItems.Items.Add(lstvItem);
@@ -268,6 +302,54 @@ namespace FIFAUltimateTeamBot
 
             //Change the item count to reflect the number of items in the selected list.
             statlblCount.Text = lstvAuctionItems.Items.Count + " item(s).";
+        }
+        /// <summary>
+        /// Load the item stats list.
+        /// </summary>
+        public void LoadItemStatsList()
+        {
+            //Check if this method has been accessed from another thread, ie. not from the GUI thread, and rectify it.
+            if (lstvStats.InvokeRequired) { Invoke((MethodInvoker)(() => LoadItemStatsList())); return; }
+
+            //Pause the drawing of the list view until a later date.
+            lstvStats.BeginUpdate();
+
+            //For all specified items, either add them to the list or update them.
+            foreach (ResourceItem item in DataManager.ResourceData.Values)
+            {
+                //If this item has already been added, just update it. Otherwise create it.
+                ListViewItem lstvItem = lstvItems.Items.Count != 0 ? lstvStats.Items.Cast<ListViewItem>().FirstOrDefault(x => x.Tag == item) : null;
+                if (lstvItem == null)
+                {
+                    //Add an item.
+                    lstvItem = new ListViewItem(item.ResourceData.FirstName, 0);
+                    lstvItem.Tag = item;
+
+                    //The data.
+                    lstvItem.SubItems.Add(item.ResourceData.LastName);
+                    lstvItem.SubItems.Add(item.ResourceData.Rating.ToString());
+
+                    //Add the item row to the list view.
+                    lstvStats.Items.Add(lstvItem);
+                }
+                else
+                {
+                    //Just update what's neccessary.
+                    lstvItem.SubItems[0].Text = item.ResourceData.FirstName;
+                    lstvItem.SubItems[1].Text = item.ResourceData.LastName;
+                    lstvItem.SubItems[2].Text = item.ResourceData.Rating.ToString();
+                }
+            }
+
+            //Auto set the width of the columns.
+            lstvStats.AutoResizeColumns(ColumnHeaderAutoResizeStyle.ColumnContent);
+            lstvStats.AutoResizeColumns(ColumnHeaderAutoResizeStyle.HeaderSize);
+
+            //Continue the drawing of the list view now that the update is complete.
+            lstvStats.EndUpdate();
+
+            //Change the item count to reflect the number of items in the selected tab.
+            statlblCount.Text = lstvStats.Items.Count + " item(s).";
         }
         /// <summary>
         /// Remove the items from the list view.
@@ -355,13 +437,19 @@ namespace FIFAUltimateTeamBot
                 var stats = DataManager.Statistics.Values.ToList();
                 var sold = stats.Count(x => x.Sold.Year > 1);
                 var soldFor = 0;
-                stats.ForEach(x => soldFor += (int)x.SoldFor);
+                var profit = 0;
+                stats.Where(x => x.Sold.Year > 1).ToList().ForEach(x =>
+                    {
+                        soldFor += (int)x.SoldFor;
+                        profit += (int)(x.SoldFor - x.SoldFor * .05) - x.AcquiredFor;
+                    });
                 var first = stats.Where(x => x.Sold.Year > 1).OrderBy(x => x.Sold).ToList();
                 var days = first != null ? (int)Math.Ceiling(DateTime.Now.Subtract(first[0].Sold).TotalDays) : 1;
                 lblInfoStats.Text = "A total of " + sold + " players have been sold for a collective sum of " +
-                    soldFor + " coins (" + (soldFor / days) + " coins/day)." + "\n\nTop ten sold players:";
+                    soldFor + " coins (" + (soldFor / days) + " coins/day)\nand a total profit of " + profit + " coins (" + (profit / days) + " coins/day).";
 
                 //The toplist.
+                lblInfoTopPlayers.Text = "Top ten sold players:\n";
                 var toplist = new Dictionary<long, int>();
                 foreach (var playerSold in stats.Where(x => x.Sold.Year > 1))
                 {
@@ -373,12 +461,27 @@ namespace FIFAUltimateTeamBot
                 {
                     if (count >= 10) { break; }
 
-                    var name = DataManager.ResourceDataExists(i.Key) ? DataManager.ResourceData[i.Key].FirstName + " " +
-                        DataManager.ResourceData[i.Key].LastName : "invalid";
-                    lblInfoStats.Text += "\n     - " + name + " (" + i.Value + ")";
+                    var name = DataManager.ResourceDataExists(i.Key) ? DataManager.ResourceData[i.Key].ResourceData.FirstName + " " +
+                        DataManager.ResourceData[i.Key].ResourceData.LastName : "invalid";
+                    lblInfoTopPlayers.Text += "\n     - " + name + " (" + i.Value + ")";
 
                     count++;
                 }
+
+                //The daily distribution.
+                var daily = new int[7];
+                stats.Where(x => x.Sold.Year > 1).ToList().ForEach(x =>
+                {
+                    daily[(int)x.Sold.DayOfWeek] += (int)(x.SoldFor - x.SoldFor * .05) - x.AcquiredFor;
+                });
+                lblInfoDays.Text = "The daily profit distribution:\n" +
+                    "\n     Mon:   " + daily[1] + " coins" +
+                    "\n     Tue:   " + daily[2] + " coins" +
+                    "\n     Wed:   " + daily[3] + " coins" +
+                    "\n     Thu:   " + daily[4] + " coins" +
+                    "\n     Fri:   " + daily[5] + " coins" +
+                    "\n     Sat:   " + daily[6] + " coins" +
+                    "\n     Sun:   " + daily[0] + " coins";
             }
             catch { }
         }
@@ -450,8 +553,9 @@ namespace FIFAUltimateTeamBot
                 }
             }
 
-            //Update the front page stats.
+            //Update the front page stats and the resource items.
             UpdateInfoStats();
+            LoadItemStatsList();
 
             //Log the items.
             Log("Updated " + tradeItems.Count + @" items.\line", true);
@@ -467,8 +571,8 @@ namespace FIFAUltimateTeamBot
 
             //Log the items.
             Log("Moved " + tradeItems.Count + @" items to trade pile.\line", true);
-            tradeItems.ForEach(item => Log("\t- " + item.ResourceData.FirstName + " " + item.ResourceData.LastName + "\t\t\t(" + item.AuctionInfo.TradeId + @")\line",
-                false));
+            tradeItems.ForEach(item => Log("\t- " + item.ResourceItem.ResourceData.FirstName + " " + item.ResourceItem.ResourceData.LastName +
+                "\t\t\t(" + item.AuctionInfo.TradeId + @")\line", false));
         }
         /// <summary>
         /// If any trade items have been auctioned, log them.
@@ -509,7 +613,7 @@ namespace FIFAUltimateTeamBot
 
             //Log the items.
             Log("Sold " + tradeItems.Count + @" items.\line", true);
-            tradeItems.ForEach(item => Log("\t- " + item.ResourceData.FirstName + " " + item.ResourceData.LastName + " for " +
+            tradeItems.ForEach(item => Log("\t- " + item.ResourceItem.ResourceData.FirstName + " " + item.ResourceItem.ResourceData.LastName + " for " +
                 item.AuctionInfo.CurrentPrice + "\t\t\t(" + item.AuctionInfo.TradeId + @")\line",
                 false));
         }
@@ -533,13 +637,6 @@ namespace FIFAUltimateTeamBot
             //Update the label.
             lblCredits.Text = "Credits: " + credits.Credits;
         }
-        /// <summary>
-        /// Change the sell state of an item.
-        /// </summary>
-        public void OnAllowForAuction(object sender, ItemCheckedEventArgs e)
-        {
-            (e.Item.Tag as PlayerItem).IsAllowedToBeSold = e.Item.Checked;
-        }
 
         /// <summary>
         /// If a sorting checkbox has been checked or unchecked, update the list of items.
@@ -561,26 +658,85 @@ namespace FIFAUltimateTeamBot
             //If no item is selected, stop here.
             if ((sender as ListView).SelectedItems.Count == 0) { return; }
 
-            //Get the item.
-            _SelectedItem = (PlayerItem)(sender as ListView).SelectedItems[0].Tag;
+            //Determine which list that fired the event.
+            if (sender == lstvItems)
+            {
+                //Get the item.
+                _SelectedItem = (PlayerItem)(sender as ListView).SelectedItems[0].Tag;
 
-            //Display the full name.
-            lblItemName.Text = _SelectedItem.ResourceData.FirstName + " " + _SelectedItem.ResourceData.LastName;
+                //Display the full name.
+                lblItemName.Text = _SelectedItem.ResourceItem.ResourceData.FirstName + " " + _SelectedItem.ResourceItem.ResourceData.LastName;
 
-            //Display some statistics.
-            lblTimesAuctioned.Text = "Times Auctioned: " + DataManager.GetStat(_SelectedItem.AuctionInfo.ItemData.Id).TimesAuctioned;
+                //Display some statistics.
+                lblTimesAuctioned.Text = "Times Auctioned: " + DataManager.GetStat(_SelectedItem.AuctionInfo.ItemData.Id).TimesAuctioned;
 
-            //Whether the item is allowed to be sold or not.
-            ckbCanBeSold.Checked = _SelectedItem.IsAllowedToBeSold;
+                //Display the default pricing.
+                lblItemsBidPrice.Text = "Bid Price: " + (int)_SelectedItem.AuctionInfo.StartingBid;
+                lblItemsBuyNowPrice.Text = "Buy Now Price: " + (int)_SelectedItem.AuctionInfo.BuyNowPrice;
+
+                //Whether the item is allowed to be auctioned or not.
+                ckbIsAllowedToBeAuctioned.Checked = _SelectedItem.IsAllowedToBeAuctioned;
+            }
+            else
+            {
+                //Get the item.
+                _SelectedResourceItem = (ResourceItem)(sender as ListView).SelectedItems[0].Tag;
+
+                //The user is not changing right now; we are.
+                _IsUserChanging = false;
+
+                //Display the full name.
+                lblStatsName.Text = _SelectedResourceItem.ResourceData.FirstName + " " + _SelectedResourceItem.ResourceData.LastName;
+
+                //Display some statistics.
+                lblStatsTimesAuctioned.Text = "Times Auctioned: ";
+
+                //Display the default pricing.
+                numStatsDefaultBidPrice.Value = _SelectedResourceItem.DefaultBidPrice;
+                numStatsDefaultBuyNowPrice.Value = _SelectedResourceItem.DefaultBuyNowPrice;
+
+                //Whether the item is allowed to be auctioned or not.
+                ckbStatsIsAllowedToBeAuctioned.Checked = _SelectedResourceItem.IsAllowedToBeAuctioned;
+
+                //From now on the user is responsible again.
+                _IsUserChanging = true;
+            }
         }
         /// <summary>
-        /// Change whether a selected item is allowed to be sold or not.
+        /// Change whether a selected item is allowed to be auctioned or not.
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void OnItemAllowedToBeSoldChanged(object sender, EventArgs e)
+        private void OnItemAllowedToBeAuctionedChanged(object sender, EventArgs e)
         {
-            _SelectedItem.IsAllowedToBeSold = ckbCanBeSold.Checked;
+            //Determine which control fired the event.
+            if (sender == ckbIsAllowedToBeAuctioned)
+            {
+                _SelectedItem.IsAllowedToBeAuctioned = ckbIsAllowedToBeAuctioned.Checked;
+                ckbIsAllowedToBeAuctioned.Checked = _SelectedItem.IsAllowedToBeAuctioned;
+            }
+            else
+            {
+                _SelectedResourceItem.IsAllowedToBeAuctioned = ckbStatsIsAllowedToBeAuctioned.Checked;
+            }
+        }
+        /// <summary>
+        /// Change the default pricing of the currently selected resource item.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void OnResourceItemDefaultPriceChanged(object sender, EventArgs e)
+        {
+            //Disallow the resource item to be auctioned for security purposes, if the user was the one that made the change.
+            if (_IsUserChanging)
+            {
+                _SelectedResourceItem.IsAllowedToBeAuctioned = false;
+                ckbStatsIsAllowedToBeAuctioned.Checked = false;
+
+                //Change the pricing.
+                _SelectedResourceItem.DefaultBidPrice = (int)numStatsDefaultBidPrice.Value;
+                _SelectedResourceItem.DefaultBuyNowPrice = (int)numStatsDefaultBuyNowPrice.Value;
+            }
         }
         /// <summary>
         /// Either expand or collapse the panel that displays the currently selected item.
@@ -597,6 +753,47 @@ namespace FIFAUltimateTeamBot
             else { btnExpandCollapseItem.Text = "--->"; }
         }
         /// <summary>
+        /// Suggest the default price.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void OnSuggestDefaultPriceClick(object sender, EventArgs e)
+        {
+            //The prices.
+            int bid = 0, buyNow = 0;
+
+            //Suggest default price.
+            switch (_SelectedResourceItem.ResourceId)
+            {
+                //Normal Bale.
+                case 1342351011: { bid = 75000; buyNow = 90000; break; }
+                //Normal Reus.
+                case 1342365630: { bid = 5300; buyNow = 5900; break; }
+                //Normal Muller.
+                case 1342366876: { bid = 1900; buyNow = 2500; break; }
+                //Normal Gomez.
+                case 1342327698: { bid = 3200; buyNow = 3900; break; }
+                //Normal Podolski.
+                case 1342327796: { bid = 2600; buyNow = 3200; break; }
+                //Normal Kroos.
+                case 1342359801: { bid = 2500; buyNow = 3100; break; }
+                default:
+                    {
+                        //Non-special players get their pricing based upon their rating.
+                        if (_SelectedResourceItem.ResourceData.Rating >= 84) { bid = 1400; buyNow = 1900; }
+                        else if (_SelectedResourceItem.ResourceData.Rating == 83) { bid = 1200; buyNow = 1700; }
+                        else if (_SelectedResourceItem.ResourceData.Rating == 82) { bid = 1000; buyNow = 1500; }
+                        else if (_SelectedResourceItem.ResourceData.Rating <= 81) { bid = 900; buyNow = 1300; }
+
+                        break;
+                    }
+            }
+
+            //Change the pricing.
+            numStatsDefaultBidPrice.Value = bid;
+            numStatsDefaultBuyNowPrice.Value = buyNow;
+        }
+        /// <summary>
         /// Start or stop the bot.
         /// </summary>
         /// <param name="sender"></param>
@@ -607,7 +804,7 @@ namespace FIFAUltimateTeamBot
             LogicManager.Start();
 
             //Jump to the log.
-            tabctrlMain.SelectedIndex = 3;
+            tabctrlMain.SelectedIndex = 4;
 
             //Log the event.
             Log(@"Program started!\line", true);

@@ -35,13 +35,17 @@
             this.helpMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tabctrlMain = new System.Windows.Forms.TabControl();
             this.tabInfo = new System.Windows.Forms.TabPage();
+            this.lblInfoDays = new System.Windows.Forms.Label();
+            this.lblInfoTopPlayers = new System.Windows.Forms.Label();
+            this.lblInfoStats = new System.Windows.Forms.Label();
+            this.lblInfoItems = new System.Windows.Forms.Label();
             this.btnMainStart = new System.Windows.Forms.Button();
             this.tabItems = new System.Windows.Forms.TabPage();
             this.btnExpandCollapseItem = new System.Windows.Forms.Button();
             this.splitItems = new System.Windows.Forms.SplitContainer();
             this.lstvItems = new System.Windows.Forms.ListView();
             this.lblTimesAuctioned = new System.Windows.Forms.Label();
-            this.ckbCanBeSold = new System.Windows.Forms.CheckBox();
+            this.ckbIsAllowedToBeAuctioned = new System.Windows.Forms.CheckBox();
             this.lblItemName = new System.Windows.Forms.Label();
             this.ckbAuctionItems = new System.Windows.Forms.CheckBox();
             this.ckbUnassigned = new System.Windows.Forms.CheckBox();
@@ -90,8 +94,18 @@
             this.statMain = new System.Windows.Forms.StatusStrip();
             this.statlblCount = new System.Windows.Forms.ToolStripStatusLabel();
             this.lblCredits = new System.Windows.Forms.Label();
-            this.lblInfoItems = new System.Windows.Forms.Label();
-            this.lblInfoStats = new System.Windows.Forms.Label();
+            this.lblItemsBidPrice = new System.Windows.Forms.Label();
+            this.lblItemsBuyNowPrice = new System.Windows.Forms.Label();
+            this.tabItemStats = new System.Windows.Forms.TabPage();
+            this.lstvStats = new System.Windows.Forms.ListView();
+            this.lblStatsDefaultBidPrice = new System.Windows.Forms.Label();
+            this.lblStatsDefaultBuyNowPrice = new System.Windows.Forms.Label();
+            this.lblStatsTimesAuctioned = new System.Windows.Forms.Label();
+            this.ckbStatsIsAllowedToBeAuctioned = new System.Windows.Forms.CheckBox();
+            this.lblStatsName = new System.Windows.Forms.Label();
+            this.numStatsDefaultBidPrice = new System.Windows.Forms.NumericUpDown();
+            this.numStatsDefaultBuyNowPrice = new System.Windows.Forms.NumericUpDown();
+            this.btnStatsSuggest = new System.Windows.Forms.Button();
             this.mnuMain.SuspendLayout();
             this.tabctrlMain.SuspendLayout();
             this.tabInfo.SuspendLayout();
@@ -119,6 +133,9 @@
             this.splitAuction.SuspendLayout();
             this.tabLog.SuspendLayout();
             this.statMain.SuspendLayout();
+            this.tabItemStats.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numStatsDefaultBidPrice)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numStatsDefaultBuyNowPrice)).BeginInit();
             this.SuspendLayout();
             // 
             // mnuMain
@@ -163,6 +180,7 @@
             this.tabctrlMain.Controls.Add(this.tabInfo);
             this.tabctrlMain.Controls.Add(this.tabItems);
             this.tabctrlMain.Controls.Add(this.tabAuctionSearch);
+            this.tabctrlMain.Controls.Add(this.tabItemStats);
             this.tabctrlMain.Controls.Add(this.tabLog);
             this.tabctrlMain.Location = new System.Drawing.Point(0, 27);
             this.tabctrlMain.Name = "tabctrlMain";
@@ -172,6 +190,8 @@
             // 
             // tabInfo
             // 
+            this.tabInfo.Controls.Add(this.lblInfoDays);
+            this.tabInfo.Controls.Add(this.lblInfoTopPlayers);
             this.tabInfo.Controls.Add(this.lblInfoStats);
             this.tabInfo.Controls.Add(this.lblInfoItems);
             this.tabInfo.Controls.Add(this.btnMainStart);
@@ -181,6 +201,42 @@
             this.tabInfo.TabIndex = 7;
             this.tabInfo.Text = "Info";
             this.tabInfo.UseVisualStyleBackColor = true;
+            // 
+            // lblInfoDays
+            // 
+            this.lblInfoDays.AutoSize = true;
+            this.lblInfoDays.Location = new System.Drawing.Point(616, 89);
+            this.lblInfoDays.Name = "lblInfoDays";
+            this.lblInfoDays.Size = new System.Drawing.Size(31, 13);
+            this.lblInfoDays.TabIndex = 4;
+            this.lblInfoDays.Text = "Days";
+            // 
+            // lblInfoTopPlayers
+            // 
+            this.lblInfoTopPlayers.AutoSize = true;
+            this.lblInfoTopPlayers.Location = new System.Drawing.Point(409, 89);
+            this.lblInfoTopPlayers.Name = "lblInfoTopPlayers";
+            this.lblInfoTopPlayers.Size = new System.Drawing.Size(63, 13);
+            this.lblInfoTopPlayers.TabIndex = 3;
+            this.lblInfoTopPlayers.Text = "Top Players";
+            // 
+            // lblInfoStats
+            // 
+            this.lblInfoStats.AutoSize = true;
+            this.lblInfoStats.Location = new System.Drawing.Point(409, 27);
+            this.lblInfoStats.Name = "lblInfoStats";
+            this.lblInfoStats.Size = new System.Drawing.Size(32, 13);
+            this.lblInfoStats.TabIndex = 2;
+            this.lblInfoStats.Text = "Items";
+            // 
+            // lblInfoItems
+            // 
+            this.lblInfoItems.AutoSize = true;
+            this.lblInfoItems.Location = new System.Drawing.Point(21, 27);
+            this.lblInfoItems.Name = "lblInfoItems";
+            this.lblInfoItems.Size = new System.Drawing.Size(32, 13);
+            this.lblInfoItems.TabIndex = 1;
+            this.lblInfoItems.Text = "Items";
             // 
             // btnMainStart
             // 
@@ -229,8 +285,10 @@
             // 
             // splitItems.Panel2
             // 
+            this.splitItems.Panel2.Controls.Add(this.lblItemsBidPrice);
+            this.splitItems.Panel2.Controls.Add(this.lblItemsBuyNowPrice);
             this.splitItems.Panel2.Controls.Add(this.lblTimesAuctioned);
-            this.splitItems.Panel2.Controls.Add(this.ckbCanBeSold);
+            this.splitItems.Panel2.Controls.Add(this.ckbIsAllowedToBeAuctioned);
             this.splitItems.Panel2.Controls.Add(this.lblItemName);
             this.splitItems.Size = new System.Drawing.Size(870, 432);
             this.splitItems.SplitterDistance = 615;
@@ -250,28 +308,28 @@
             this.lblTimesAuctioned.AutoSize = true;
             this.lblTimesAuctioned.Location = new System.Drawing.Point(3, 157);
             this.lblTimesAuctioned.Name = "lblTimesAuctioned";
-            this.lblTimesAuctioned.Size = new System.Drawing.Size(35, 13);
+            this.lblTimesAuctioned.Size = new System.Drawing.Size(86, 13);
             this.lblTimesAuctioned.TabIndex = 8;
-            this.lblTimesAuctioned.Text = "label1";
+            this.lblTimesAuctioned.Text = "Times Auctioned";
             // 
-            // ckbCanBeSold
+            // ckbIsAllowedToBeAuctioned
             // 
-            this.ckbCanBeSold.AutoSize = true;
-            this.ckbCanBeSold.Location = new System.Drawing.Point(6, 301);
-            this.ckbCanBeSold.Name = "ckbCanBeSold";
-            this.ckbCanBeSold.Size = new System.Drawing.Size(82, 17);
-            this.ckbCanBeSold.TabIndex = 7;
-            this.ckbCanBeSold.Text = "Can be sold";
-            this.ckbCanBeSold.UseVisualStyleBackColor = true;
+            this.ckbIsAllowedToBeAuctioned.AutoSize = true;
+            this.ckbIsAllowedToBeAuctioned.Location = new System.Drawing.Point(6, 301);
+            this.ckbIsAllowedToBeAuctioned.Name = "ckbIsAllowedToBeAuctioned";
+            this.ckbIsAllowedToBeAuctioned.Size = new System.Drawing.Size(146, 17);
+            this.ckbIsAllowedToBeAuctioned.TabIndex = 7;
+            this.ckbIsAllowedToBeAuctioned.Text = "Allowed To Be Auctioned";
+            this.ckbIsAllowedToBeAuctioned.UseVisualStyleBackColor = true;
             // 
             // lblItemName
             // 
             this.lblItemName.AutoSize = true;
             this.lblItemName.Location = new System.Drawing.Point(3, 36);
             this.lblItemName.Name = "lblItemName";
-            this.lblItemName.Size = new System.Drawing.Size(35, 13);
+            this.lblItemName.Size = new System.Drawing.Size(67, 13);
             this.lblItemName.TabIndex = 0;
-            this.lblItemName.Text = "label1";
+            this.lblItemName.Text = "Player Name";
             // 
             // ckbAuctionItems
             // 
@@ -732,23 +790,128 @@
             this.lblCredits.TabIndex = 1;
             this.lblCredits.Text = "Credits:";
             // 
-            // lblInfoItems
+            // lblItemsBidPrice
             // 
-            this.lblInfoItems.AutoSize = true;
-            this.lblInfoItems.Location = new System.Drawing.Point(21, 27);
-            this.lblInfoItems.Name = "lblInfoItems";
-            this.lblInfoItems.Size = new System.Drawing.Size(32, 13);
-            this.lblInfoItems.TabIndex = 1;
-            this.lblInfoItems.Text = "Items";
+            this.lblItemsBidPrice.AutoSize = true;
+            this.lblItemsBidPrice.Location = new System.Drawing.Point(3, 217);
+            this.lblItemsBidPrice.Name = "lblItemsBidPrice";
+            this.lblItemsBidPrice.Size = new System.Drawing.Size(49, 13);
+            this.lblItemsBidPrice.TabIndex = 17;
+            this.lblItemsBidPrice.Text = "Bid Price";
             // 
-            // lblInfoStats
+            // lblItemsBuyNowPrice
             // 
-            this.lblInfoStats.AutoSize = true;
-            this.lblInfoStats.Location = new System.Drawing.Point(409, 27);
-            this.lblInfoStats.Name = "lblInfoStats";
-            this.lblInfoStats.Size = new System.Drawing.Size(32, 13);
-            this.lblInfoStats.TabIndex = 2;
-            this.lblInfoStats.Text = "Items";
+            this.lblItemsBuyNowPrice.AutoSize = true;
+            this.lblItemsBuyNowPrice.Location = new System.Drawing.Point(3, 243);
+            this.lblItemsBuyNowPrice.Name = "lblItemsBuyNowPrice";
+            this.lblItemsBuyNowPrice.Size = new System.Drawing.Size(77, 13);
+            this.lblItemsBuyNowPrice.TabIndex = 19;
+            this.lblItemsBuyNowPrice.Text = "Buy Now Price";
+            // 
+            // tabItemStats
+            // 
+            this.tabItemStats.Controls.Add(this.btnStatsSuggest);
+            this.tabItemStats.Controls.Add(this.numStatsDefaultBidPrice);
+            this.tabItemStats.Controls.Add(this.numStatsDefaultBuyNowPrice);
+            this.tabItemStats.Controls.Add(this.lblStatsDefaultBidPrice);
+            this.tabItemStats.Controls.Add(this.lblStatsDefaultBuyNowPrice);
+            this.tabItemStats.Controls.Add(this.lblStatsTimesAuctioned);
+            this.tabItemStats.Controls.Add(this.ckbStatsIsAllowedToBeAuctioned);
+            this.tabItemStats.Controls.Add(this.lblStatsName);
+            this.tabItemStats.Controls.Add(this.lstvStats);
+            this.tabItemStats.Location = new System.Drawing.Point(4, 22);
+            this.tabItemStats.Name = "tabItemStats";
+            this.tabItemStats.Size = new System.Drawing.Size(876, 484);
+            this.tabItemStats.TabIndex = 8;
+            this.tabItemStats.Text = "Stats";
+            this.tabItemStats.UseVisualStyleBackColor = true;
+            // 
+            // lstvStats
+            // 
+            this.lstvStats.Location = new System.Drawing.Point(8, 12);
+            this.lstvStats.Name = "lstvStats";
+            this.lstvStats.Size = new System.Drawing.Size(440, 469);
+            this.lstvStats.TabIndex = 0;
+            this.lstvStats.UseCompatibleStateImageBehavior = false;
+            // 
+            // lblStatsDefaultBidPrice
+            // 
+            this.lblStatsDefaultBidPrice.AutoSize = true;
+            this.lblStatsDefaultBidPrice.Location = new System.Drawing.Point(464, 193);
+            this.lblStatsDefaultBidPrice.Name = "lblStatsDefaultBidPrice";
+            this.lblStatsDefaultBidPrice.Size = new System.Drawing.Size(52, 13);
+            this.lblStatsDefaultBidPrice.TabIndex = 23;
+            this.lblStatsDefaultBidPrice.Text = "Bid Price:";
+            // 
+            // lblStatsDefaultBuyNowPrice
+            // 
+            this.lblStatsDefaultBuyNowPrice.AutoSize = true;
+            this.lblStatsDefaultBuyNowPrice.Location = new System.Drawing.Point(464, 219);
+            this.lblStatsDefaultBuyNowPrice.Name = "lblStatsDefaultBuyNowPrice";
+            this.lblStatsDefaultBuyNowPrice.Size = new System.Drawing.Size(80, 13);
+            this.lblStatsDefaultBuyNowPrice.TabIndex = 24;
+            this.lblStatsDefaultBuyNowPrice.Text = "Buy Now Price:";
+            // 
+            // lblStatsTimesAuctioned
+            // 
+            this.lblStatsTimesAuctioned.AutoSize = true;
+            this.lblStatsTimesAuctioned.Location = new System.Drawing.Point(464, 133);
+            this.lblStatsTimesAuctioned.Name = "lblStatsTimesAuctioned";
+            this.lblStatsTimesAuctioned.Size = new System.Drawing.Size(86, 13);
+            this.lblStatsTimesAuctioned.TabIndex = 22;
+            this.lblStatsTimesAuctioned.Text = "Times Auctioned";
+            // 
+            // ckbStatsIsAllowedToBeAuctioned
+            // 
+            this.ckbStatsIsAllowedToBeAuctioned.AutoSize = true;
+            this.ckbStatsIsAllowedToBeAuctioned.Location = new System.Drawing.Point(467, 318);
+            this.ckbStatsIsAllowedToBeAuctioned.Name = "ckbStatsIsAllowedToBeAuctioned";
+            this.ckbStatsIsAllowedToBeAuctioned.Size = new System.Drawing.Size(146, 17);
+            this.ckbStatsIsAllowedToBeAuctioned.TabIndex = 21;
+            this.ckbStatsIsAllowedToBeAuctioned.Text = "Allowed To Be Auctioned";
+            this.ckbStatsIsAllowedToBeAuctioned.UseVisualStyleBackColor = true;
+            // 
+            // lblStatsName
+            // 
+            this.lblStatsName.AutoSize = true;
+            this.lblStatsName.Location = new System.Drawing.Point(464, 12);
+            this.lblStatsName.Name = "lblStatsName";
+            this.lblStatsName.Size = new System.Drawing.Size(67, 13);
+            this.lblStatsName.TabIndex = 20;
+            this.lblStatsName.Text = "Player Name";
+            // 
+            // numStatsDefaultBidPrice
+            // 
+            this.numStatsDefaultBidPrice.Location = new System.Drawing.Point(545, 191);
+            this.numStatsDefaultBidPrice.Maximum = new decimal(new int[] {
+            15000000,
+            0,
+            0,
+            0});
+            this.numStatsDefaultBidPrice.Name = "numStatsDefaultBidPrice";
+            this.numStatsDefaultBidPrice.Size = new System.Drawing.Size(68, 20);
+            this.numStatsDefaultBidPrice.TabIndex = 25;
+            // 
+            // numStatsDefaultBuyNowPrice
+            // 
+            this.numStatsDefaultBuyNowPrice.Location = new System.Drawing.Point(545, 217);
+            this.numStatsDefaultBuyNowPrice.Maximum = new decimal(new int[] {
+            15000000,
+            0,
+            0,
+            0});
+            this.numStatsDefaultBuyNowPrice.Name = "numStatsDefaultBuyNowPrice";
+            this.numStatsDefaultBuyNowPrice.Size = new System.Drawing.Size(68, 20);
+            this.numStatsDefaultBuyNowPrice.TabIndex = 26;
+            // 
+            // btnStatsSuggest
+            // 
+            this.btnStatsSuggest.Location = new System.Drawing.Point(545, 243);
+            this.btnStatsSuggest.Name = "btnStatsSuggest";
+            this.btnStatsSuggest.Size = new System.Drawing.Size(54, 21);
+            this.btnStatsSuggest.TabIndex = 27;
+            this.btnStatsSuggest.Text = "Suggest";
+            this.btnStatsSuggest.UseVisualStyleBackColor = true;
             // 
             // Main
             // 
@@ -798,6 +961,10 @@
             this.tabLog.ResumeLayout(false);
             this.statMain.ResumeLayout(false);
             this.statMain.PerformLayout();
+            this.tabItemStats.ResumeLayout(false);
+            this.tabItemStats.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numStatsDefaultBidPrice)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numStatsDefaultBuyNowPrice)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -825,7 +992,7 @@
         private System.Windows.Forms.CheckBox ckbTradePile;
         private System.Windows.Forms.SplitContainer splitItems;
         private System.Windows.Forms.Label lblItemName;
-        private System.Windows.Forms.CheckBox ckbCanBeSold;
+        private System.Windows.Forms.CheckBox ckbIsAllowedToBeAuctioned;
         private System.Windows.Forms.Button btnExpandCollapseItem;
         private System.Windows.Forms.ComboBox cmbLevel;
         private System.Windows.Forms.Label lblLevel;
@@ -869,6 +1036,20 @@
         private System.Windows.Forms.Label lblTimesAuctioned;
         private System.Windows.Forms.Label lblInfoItems;
         private System.Windows.Forms.Label lblInfoStats;
+        private System.Windows.Forms.Label lblInfoDays;
+        private System.Windows.Forms.Label lblInfoTopPlayers;
+        private System.Windows.Forms.Label lblItemsBidPrice;
+        private System.Windows.Forms.Label lblItemsBuyNowPrice;
+        private System.Windows.Forms.TabPage tabItemStats;
+        private System.Windows.Forms.ListView lstvStats;
+        private System.Windows.Forms.Label lblStatsDefaultBidPrice;
+        private System.Windows.Forms.Label lblStatsDefaultBuyNowPrice;
+        private System.Windows.Forms.Label lblStatsTimesAuctioned;
+        private System.Windows.Forms.CheckBox ckbStatsIsAllowedToBeAuctioned;
+        private System.Windows.Forms.Label lblStatsName;
+        private System.Windows.Forms.NumericUpDown numStatsDefaultBidPrice;
+        private System.Windows.Forms.NumericUpDown numStatsDefaultBuyNowPrice;
+        private System.Windows.Forms.Button btnStatsSuggest;
     }
 }
 
