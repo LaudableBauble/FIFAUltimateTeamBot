@@ -143,8 +143,10 @@ namespace FIFAUltimateTeamBot
             set
             {
                 var resource = ResourceItem;
+                var stats = DataManager.GetStat(_AuctionInfo.ItemData.Id);
                 if (resource != null && resource.IsAllowedToBeAuctioned) { _IsAllowedToBeAuctioned = value; }
                 else { _IsAllowedToBeAuctioned = false; }
+                if (stats != null) { stats.IsAllowedToBeAuctioned = _IsAllowedToBeAuctioned; }
             }
         }
         /// <summary>

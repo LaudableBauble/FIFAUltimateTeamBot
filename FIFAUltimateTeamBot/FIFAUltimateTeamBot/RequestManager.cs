@@ -290,8 +290,13 @@ namespace FIFAUltimateTeamBot
                         DataManager.AddOrUpdate(await new ItemRequest().GetItemAsync(auction.ItemData.ResourceId), auction.ItemData.ResourceId);
                     }
 
+                    //Allow items to be auctioned based on prior decision.
+                    if (DataManager.StatisticsExists(item.AuctionInfo.ItemData.Id))
+                    {
+                        item.IsAllowedToBeAuctioned = DataManager.GetStat(item.AuctionInfo.ItemData.Id).IsAllowedToBeAuctioned;
+                    }
+
                     item.Location = TradeItemLocation.TradePile;
-                    item.IsAllowedToBeAuctioned = true;
                 }
 
                 //Notify all interested parties.
@@ -329,6 +334,12 @@ namespace FIFAUltimateTeamBot
                     DataManager.AddOrUpdate(await new ItemRequest().GetItemAsync(auction.ItemData.ResourceId), auction.ItemData.ResourceId);
                 }
 
+                //Allow items to be auctioned based on prior decision.
+                if (DataManager.StatisticsExists(item.AuctionInfo.ItemData.Id))
+                {
+                    item.IsAllowedToBeAuctioned = DataManager.GetStat(item.AuctionInfo.ItemData.Id).IsAllowedToBeAuctioned;
+                }
+
                 item.Location = TradeItemLocation.WatchList;
             }
 
@@ -360,6 +371,12 @@ namespace FIFAUltimateTeamBot
                 if (!DataManager.ResourceDataExists(data.ResourceId))
                 {
                     DataManager.AddOrUpdate(await new ItemRequest().GetItemAsync(data.ResourceId), data.ResourceId);
+                }
+
+                //Allow items to be auctioned based on prior decision.
+                if (DataManager.StatisticsExists(item.AuctionInfo.ItemData.Id))
+                {
+                    item.IsAllowedToBeAuctioned = DataManager.GetStat(item.AuctionInfo.ItemData.Id).IsAllowedToBeAuctioned;
                 }
 
                 item.Location = TradeItemLocation.Unassigned;
@@ -394,6 +411,12 @@ namespace FIFAUltimateTeamBot
                 if (!DataManager.ResourceDataExists(data.ResourceId))
                 {
                     DataManager.AddOrUpdate(await new ItemRequest().GetItemAsync(data.ResourceId), data.ResourceId);
+                }
+
+                //Allow items to be auctioned based on prior decision.
+                if (DataManager.StatisticsExists(item.AuctionInfo.ItemData.Id))
+                {
+                    item.IsAllowedToBeAuctioned = DataManager.GetStat(item.AuctionInfo.ItemData.Id).IsAllowedToBeAuctioned;
                 }
 
                 item.Location = TradeItemLocation.Club;

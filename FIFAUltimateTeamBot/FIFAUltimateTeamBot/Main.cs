@@ -47,6 +47,9 @@ namespace FIFAUltimateTeamBot
             numStatsDefaultBidPrice.ValueChanged += OnResourceItemDefaultPriceChanged;
             numStatsDefaultBuyNowPrice.ValueChanged += OnResourceItemDefaultPriceChanged;
             btnStatsSuggest.Click += OnSuggestDefaultPriceClick;
+            lstvItems.ColumnClick += OnColumnClick;
+            lstvAuctionItems.ColumnClick += OnColumnClick;
+            lstvStats.ColumnClick += OnColumnClick;
             RequestManager.OnLoadTradePile += OnLoadTradePile;
             RequestManager.OnLoadWatchList += OnLoadWatchList;
             RequestManager.OnLoadUnassigned += OnLoadUnassigned;
@@ -63,6 +66,11 @@ namespace FIFAUltimateTeamBot
             SetupAuctionSearch();
             UpdateInfoStats();
             LoadItemStatsList();
+
+            //Create an instance of a ListView column sorter and assign it to the ListView controls.
+            lstvItems.ListViewItemSorter = new ListViewColumnSorter();
+            lstvAuctionItems.ListViewItemSorter = new ListViewColumnSorter();
+            lstvStats.ListViewItemSorter = new ListViewColumnSorter();
 
             //Display the name and version of the bot.
             this.Text = "FIFA 13 Ultimate Team Bot (v0.1.0)";
@@ -318,7 +326,7 @@ namespace FIFAUltimateTeamBot
             foreach (ResourceItem item in DataManager.ResourceData.Values)
             {
                 //If this item has already been added, just update it. Otherwise create it.
-                ListViewItem lstvItem = lstvItems.Items.Count != 0 ? lstvStats.Items.Cast<ListViewItem>().FirstOrDefault(x => x.Tag == item) : null;
+                ListViewItem lstvItem = lstvStats.Items.Count != 0 ? lstvStats.Items.Cast<ListViewItem>().FirstOrDefault(x => x.Tag == item) : null;
                 if (lstvItem == null)
                 {
                     //Add an item.
@@ -792,6 +800,34 @@ namespace FIFAUltimateTeamBot
             //Change the pricing.
             numStatsDefaultBidPrice.Value = bid;
             numStatsDefaultBuyNowPrice.Value = buyNow;
+        }
+        /// <summary>
+        /// If a column in any list has been clicked, sort it.
+        /// </summary>
+        /// <param name="o"></param>
+        /// <param name="e"></param>
+        private void OnColumnClick(object o, ColumnClickEventArgs e)
+        {
+            //Get the list view and column sorter.
+            ListView listView = (o as ListView);
+            ListViewColumnSorter sorter = (listView.ListViewItemSorter as ListViewColumnSorter);
+
+            // Determine if the clicked column is already the column that is being sorted.
+            if (e.Column == sorter.SortColumn)
+            {
+                // Reverse the current sort direction for this column.
+                if (sorter.Order == SortOrder.Ascending) { sorter.Order = SortOrder.Descending; }
+                else { sorter.Order = SortOrder.Ascending; }
+            }
+            else
+            {
+                // Set the column number that is to be sorted; default to descending.
+                sorter.SortColumn = e.Column;
+                sorter.Order = SortOrder.Descending;
+            }
+
+            // Perform the sort with these new sort options.
+            listView.Sort();
         }
         /// <summary>
         /// Start or stop the bot.

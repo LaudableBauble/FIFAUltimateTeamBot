@@ -14,13 +14,13 @@ namespace FIFAUltimateTeamBot
         [STAThread]
         static void Main()
         {
-            try
+            //try
             {
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
                 Application.Run(new Main());
             }
-            catch (Exception e) { MessageBox.Show(e.Message); }
+            //catch (Exception e) { MessageBox.Show(e.Message); }
         }
     }
 }

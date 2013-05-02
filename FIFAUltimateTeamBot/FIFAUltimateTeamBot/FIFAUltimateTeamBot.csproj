@@ -45,6 +45,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ListViewColumnSorter.cs" />
     <Compile Include="ResourceItem.cs" />
     <Compile Include="FilterParameters.cs" />
     <Compile Include="KeyValuePair.cs" />
